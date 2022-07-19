@@ -108,10 +108,13 @@ class TestierWidget extends HookConsumerWidget {
         int updateCount = 0;
         for (Runner runner in ref.watch(runnerMapProvider).values) {
           if (runner.discipline.id == disc.id) {
-            for (final punch in runner.punches.values) {
+            for (final punch in runner.radioPunches.values) {
               if (!punch.isRead) {
                 updateCount++;
               }
+            }
+            if (runner.finishPunch.isPunched && !runner.finishPunch.isRead) {
+              updateCount++;
             }
           }
         }
@@ -172,8 +175,8 @@ class DisciplineTab extends HookConsumerWidget {
             .values
             .where((element) =>
                 element.discipline.id == discId &&
-                element.punches.containsKey(controlId) &&
-                !element.punches[controlId]!.isRead)
+                element.radioPunches.containsKey(controlId) &&
+                !element.radioPunches[controlId]!.isRead)
             .length;
 
         mommies.add(Text(
@@ -214,10 +217,11 @@ class RadioPunches extends HookConsumerWidget {
         .values
         .where((runner) =>
             runner.discipline.id == discId &&
-            runner.punches.containsKey(controlId))
+            runner.radioPunches.containsKey(controlId))
         .toList();
 
-    runners.sort((a, b) => a.finishedAfter.compareTo(b.finishedAfter)); // TODO
+    runners.sort((a, b) => a.radioPunches[controlId]!.punchedAfter
+        .compareTo(b.radioPunches[controlId]!.punchedAfter));
 
     return ListView(
       controller: ScrollController(),
@@ -242,11 +246,11 @@ class Finishes extends HookConsumerWidget {
         .watch(runnerMapProvider)
         .values
         .where((runner) =>
-            runner.discipline.id == discId &&
-            runner.finishedAfter.inMilliseconds.toInt() > 0)
+            runner.discipline.id == discId && runner.finishPunch.isPunched)
         .toList();
 
-    runners.sort((a, b) => a.finishedAfter.compareTo(b.finishedAfter));
+    runners.sort((a, b) =>
+        a.finishPunch.punchedAfter.compareTo(b.finishPunch.punchedAfter));
 
     return ListView(
       controller: ScrollController(),
@@ -268,7 +272,7 @@ class RunnerPunchItem extends HookConsumerWidget {
     final runner = ref.watch(_currentRunner);
     final controlId = ref.watch(_currentControlId);
 
-    void tapped() {
+    void _tapped() {
       ref
           .read(runnerMapProvider.notifier)
           .toggleControlUpdateSingle(runner.id, controlId);
@@ -276,10 +280,10 @@ class RunnerPunchItem extends HookConsumerWidget {
 
     return ListTile(
       title: Text(runner.name),
-      subtitle: Text(runner.punches[controlId]!.punchedAfter.toString()),
+      subtitle: Text(runner.radioPunches[controlId]!.punchedAfter.toString()),
       tileColor:
-          runner.punches[controlId]!.isRead ? Colors.white : Colors.green,
-      onTap: tapped,
+          runner.radioPunches[controlId]!.isRead ? Colors.white : Colors.green,
+      onTap: _tapped,
     );
   }
 }
@@ -291,66 +295,15 @@ class RunnerFinishItem extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final runner = ref.watch(_currentRunner);
 
+    void _tapped() {
+      ref.read(runnerMapProvider.notifier).toggleFinishUpdateSingle(runner.id);
+    }
+
     return ListTile(
       title: Text(runner.name),
-      subtitle: Text(runner.finishedAfter.toString()),
+      subtitle: Text(runner.finishPunch.punchedAfter.toString()),
+      tileColor: runner.finishPunch.isRead ? Colors.white : Colors.green,
+      onTap: _tapped,
     );
   }
 }
-
-// class YayWidget extends HookConsumerWidget {
-//   YayWidget({Key? key}) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context, WidgetRef ref) {
-//     final clubs = ref.watch(clubMapProvider).values.toList();
-//     final controls = ref.watch(controlMapProvider).values.toList();
-//     final disciplines = ref.watch(disciplineMapProvider).values.toList();
-//     final runners = ref.watch(runnerMapProvider).values.toList();
-
-//     List<ListTile> allTheThings() {
-//       final List<ListTile> things = [];
-//       for (Club club in clubs) {
-//         things.add(ListTile(
-//           title: Text(club.name),
-//           subtitle: Text(club.country.toString()),
-//         ));
-//       }
-
-//       for (Control control in controls) {
-//         things.add(ListTile(
-//           title: Text(control.name),
-//           subtitle: Text(control.id.toString()),
-//         ));
-//       }
-
-//       for (Discipline discipline in disciplines) {
-//         things.add(ListTile(
-//           title: Text(discipline.name),
-//           subtitle: Text(discipline.id.toString()),
-//         ));
-//       }
-
-//       for (Runner runner in runners) {
-//         things.add(ListTile(
-//           title: Text(runner.name),
-//           subtitle: Text(runner.club.name),
-//         ));
-//       }
-
-//       return things;
-//     }
-
-//     //return Text(clubs.first.name);
-
-//     return Column(
-//       children: [
-//         Expanded(
-//           child: ListView(
-//             children: allTheThings(),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-// }
