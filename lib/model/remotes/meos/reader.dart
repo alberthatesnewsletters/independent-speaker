@@ -196,6 +196,7 @@ class MeOSreader {
             startTime: startTime,
             radioTimes: radioTimes,
             runningTime: runningTime,
+            isFinished: runningTime != 0,
             status: status,
             hasNoClub: hasNoClub);
       }

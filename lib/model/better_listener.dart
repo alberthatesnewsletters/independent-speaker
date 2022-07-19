@@ -1,5 +1,7 @@
 // Albert 2022-07-11: "maybe I won't need this class"
 
+import 'package:attempt4/model/dataclasses/immutable/finish_status.dart';
+
 import 'dataclasses/immutable/punch_status.dart';
 import 'enums/country.dart';
 import 'enums/runner_status.dart';
@@ -25,6 +27,7 @@ class BetterListener {
   final StateNotifierProvider<RunnerMap, Map<int, Runner>> _runners;
   final WidgetRef _ref;
   final int _batchUpdateThreshold = 3; // number pulled out of my ass
+  final DateTime _placeHolderTime = DateTime(2000);
 
   // TODO divide into four classes
 
@@ -220,6 +223,18 @@ class BetterListener {
             receivedAt: DateTime.now())
     };
 
+    final finish = FinishStatus(
+        isPunched: runner.isFinished,
+        punchedAt: runner.isFinished
+            ? _determineStartTime(runner.startTime)
+                .add(_determineRunningTime(runner.runningTime))
+            : _placeHolderTime,
+        punchedAfter: runner.isFinished
+            ? _determineRunningTime(runner.runningTime)
+            : const Duration(milliseconds: 0),
+        receivedAt: DateTime.now(),
+        isRead: false);
+
     return Runner(
         id: runner.id,
         name: runner.name,
@@ -229,12 +244,9 @@ class BetterListener {
         numberBib: runner.numberBib,
         status: runner.status,
         hasNoClub: runner.hasNoClub,
-        punches: punches,
+        radioPunches: punches,
+        finishPunch: finish,
         startTime: _determineStartTime(runner.startTime),
-        finishedAfter: _determineRunningTime(runner.runningTime),
-        finishedAt: _determineStartTime(runner.startTime)
-            .add(_determineRunningTime(runner.runningTime)),
-        hasRunningTimeUpdate: runner.runningTime != 0, // TODO not the best way
         hasStatusUpdate: runner.status != RunnerStatus.Unknown,
         updatedAt: DateTime.now());
   }
