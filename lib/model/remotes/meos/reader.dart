@@ -14,6 +14,8 @@ import '../../../utils.dart';
 import '../../enums/country.dart';
 
 class MeOSreader {
+  MeOSreader(this._conn, this._listener);
+
   final MeOSconnection _conn;
   final BetterListener _listener;
   int _fullLoads = 0;
@@ -36,8 +38,6 @@ class MeOSreader {
     21: RunnerStatus.Cancelled,
     99: RunnerStatus.NotParticipating
   };
-
-  MeOSreader(this._conn, this._listener);
 
   void _wipeLists() {
     _listener.wipeInfo();
@@ -293,10 +293,12 @@ class MeOSreader {
   }
 
   Future<void> run() async {
-    //await _parseUpdates();
-    while (true) {
-      await _parseUpdates();
-      await Future.delayed(Duration(milliseconds: Utils.updateWaitMs));
+    if (!Utils.isRunning) {
+      Utils.isRunning; // just to make hot reload less stupid
+      while (true) {
+        await _parseUpdates();
+        await Future.delayed(Duration(milliseconds: Utils.updateWaitMs));
+      }
     }
   }
 }

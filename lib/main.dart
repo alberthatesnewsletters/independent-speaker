@@ -1,7 +1,6 @@
 import 'package:attempt4/model/dataclasses/immutable/club.dart';
 import 'package:attempt4/model/enums/runner_status.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'model/better_listener.dart';
@@ -90,10 +89,9 @@ class TestWidget extends HookConsumerWidget {
         disciplineMapProvider, runnerMapProvider, ref);
     final reader = MeOSreader(conn, listener);
     reader.run();
-
     //return const Text("Hello world!");
 
-    return Container(child: const TestierWidget());
+    return const TestierWidget();
   }
 }
 
@@ -158,11 +156,43 @@ class DisciplineTab extends HookConsumerWidget {
     List<Widget> babySpawner() {
       List<Widget> babbies = [];
       for (int controlId in controls) {
-        babbies.add(ProviderScope(
-            overrides: [_currentControlId.overrideWithValue(controlId)],
-            child: const RadioPunches()));
+        babbies.add(Column(
+          children: [
+            Row(
+              children: [
+                TextButton(
+                    onPressed: () => ref
+                        .read(runnerMapProvider.notifier)
+                        .markReadPunchUpdateDiscipline(discId, controlId),
+                    child: const Text("Mark all as read"))
+              ],
+            ),
+            Expanded(
+              child: ProviderScope(
+                  overrides: [_currentControlId.overrideWithValue(controlId)],
+                  child: const RadioPunches()),
+            ),
+          ],
+        ));
       }
-      babbies.add(const Finishes());
+
+      babbies.add(Column(
+        children: [
+          Row(
+            children: [
+              TextButton(
+                  onPressed: () => ref
+                      .read(runnerMapProvider.notifier)
+                      .markReadFinishUpdateDiscipline(discId),
+                  child: const Text("Mark all as read"))
+            ],
+          ),
+          const Expanded(
+            child: Finishes(),
+          ),
+        ],
+      ));
+
       return babbies;
     }
 
