@@ -178,7 +178,7 @@ class DisciplineTab extends HookConsumerWidget {
                 TextButton(
                     onPressed: () => ref
                         .read(disciplineMapProvider.notifier)
-                        .toggleSorting(discId, controlId),
+                        .toggleControlSorting(discId, controlId),
                     child: const Text("Toggle sorting")),
               ],
             ),
@@ -199,7 +199,12 @@ class DisciplineTab extends HookConsumerWidget {
                   onPressed: () => ref
                       .read(runnerMapProvider.notifier)
                       .markReadFinishUpdateDiscipline(discId),
-                  child: const Text("Mark all as read"))
+                  child: const Text("Mark all as read")),
+              TextButton(
+                  onPressed: () => ref
+                      .read(disciplineMapProvider.notifier)
+                      .toggleFinishSorting(discId),
+                  child: const Text("Toggle sorting")),
             ],
           ),
           const Expanded(
@@ -229,7 +234,19 @@ class DisciplineTab extends HookConsumerWidget {
           style: const TextStyle(fontSize: 30),
         ));
       }
-      mommies.add(const Text("Finish", style: TextStyle(fontSize: 30)));
+
+      // const okStatuses = {RunnerStatus.Ok, RunnerStatus.OkNoTime};
+
+      final newsCount = ref
+          .watch(runnerMapProvider)
+          .values
+          .where((element) =>
+              element.discipline.id == discId &&
+              element.finishPunch.isPunched &&
+              !element.finishPunch.isRead)
+          .length;
+      mommies.add(
+          Text("Finish: $newsCount", style: const TextStyle(fontSize: 30)));
       return mommies;
     }
 
@@ -294,6 +311,7 @@ class Finishes extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final discId = ref.watch(_currentDisciplineId);
+    // const okStatuses = {RunnerStatus.Ok, RunnerStatus.OkNoTime};
 
     final runners = ref
         .watch(runnerMapProvider)
@@ -302,8 +320,15 @@ class Finishes extends HookConsumerWidget {
             runner.discipline.id == discId && runner.finishPunch.isPunched)
         .toList();
 
-    runners.sort((a, b) =>
-        a.finishPunch.punchedAfter.compareTo(b.finishPunch.punchedAfter));
+    final sorting = ref.watch(disciplineMapProvider)[discId]!.finishSorting;
+
+    if (sorting == Sorting.NewestFirst) {
+      runners.sort(
+          (a, b) => a.finishPunch.punchedAt.compareTo(b.finishPunch.punchedAt));
+    } else {
+      runners.sort((a, b) =>
+          a.finishPunch.punchedAfter.compareTo(b.finishPunch.punchedAfter));
+    }
 
     return ListView(
       controller: ScrollController(),

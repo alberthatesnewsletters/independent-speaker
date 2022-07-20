@@ -171,7 +171,10 @@ class BetterListener {
             sorting: Sorting.NewestFirst)
     };
     return Discipline(
-        id: discipline.id, name: discipline.name, controls: controls);
+        id: discipline.id,
+        name: discipline.name,
+        controls: controls,
+        finishSorting: Sorting.NewestFirst);
   }
 
   void _deleteDiscipline(RemoteDiscipline toDelete) {
@@ -276,8 +279,11 @@ class BetterListener {
 
   Discipline _disciplineForRunner(int discId) {
     if (!_ref.read(_disciplines).containsKey(discId)) {
-      final placeholder =
-          Discipline(id: discId, name: "PLACEHOLDER", controls: const {});
+      final placeholder = Discipline(
+          id: discId,
+          name: "PLACEHOLDER",
+          controls: const {},
+          finishSorting: Sorting.NewestFirst);
       _ref.read(_disciplines.notifier).add(placeholder);
     }
     return (_ref.read(_disciplines)[discId]!);
