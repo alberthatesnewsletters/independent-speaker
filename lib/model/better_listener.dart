@@ -1,6 +1,8 @@
 // Albert 2022-07-11: "maybe I won't need this class"
 
+import 'package:attempt4/model/dataclasses/immutable/control_settings.dart';
 import 'package:attempt4/model/dataclasses/immutable/finish_status.dart';
+import 'package:attempt4/model/enums/sorting.dart';
 
 import 'dataclasses/immutable/punch_status.dart';
 import 'enums/country.dart';
@@ -98,8 +100,8 @@ class BetterListener {
 
   void _deleteControl(RemoteControl toDelete) {
     for (final discipline in _ref.read(_disciplines).values) {
-      if (discipline.controls.contains(toDelete.id)) {
-        final newControls = List<int>.from(discipline.controls);
+      if (discipline.controls.containsKey(toDelete.id)) {
+        final newControls = Map<int, ControlSettings>.from(discipline.controls);
         newControls.remove(toDelete.id);
         _ref
             .read(_disciplines.notifier)
@@ -125,10 +127,15 @@ class BetterListener {
 
   void _updateControl(RemoteControl update) {
     final updatedControl = _generateControl(update);
-    // TODO give a shit?
-    // for (Discipline discipline in ref.read(disciplines).values) {
-
-    // }
+    for (Discipline discipline in _ref.read(_disciplines).values) {
+      if (discipline.controls.containsKey(update.id)) {
+        final controls = discipline.controls;
+        controls[update.id] = controls[update.id]!.newName(update.name);
+        _ref
+            .read(_disciplines.notifier)
+            .add(discipline.copyWith(controls: controls));
+      }
+    }
     _ref.read(_controls.notifier).add(updatedControl);
   }
 
@@ -154,10 +161,20 @@ class BetterListener {
   }
 
   Discipline _generateDiscipline(RemoteDiscipline discipline) {
+    final controls = {
+      for (var e in discipline.controls)
+        e: ControlSettings(
+            id: e,
+            name: _ref.read(_controls).containsKey(e)
+                ? _ref.read(_controls)[e]!.name
+                : "PLACEHOLDER",
+            sorting: Sorting.NewestFirst)
+    };
     return Discipline(
         id: discipline.id,
         name: discipline.name,
-        controls: discipline.controls);
+        controls: controls,
+        finishSorting: Sorting.NewestFirst);
   }
 
   void _deleteDiscipline(RemoteDiscipline toDelete) {
@@ -262,8 +279,11 @@ class BetterListener {
 
   Discipline _disciplineForRunner(int discId) {
     if (!_ref.read(_disciplines).containsKey(discId)) {
-      final placeholder =
-          Discipline(id: discId, name: "PLACEHOLDER", controls: const []);
+      final placeholder = Discipline(
+          id: discId,
+          name: "PLACEHOLDER",
+          controls: const {},
+          finishSorting: Sorting.NewestFirst);
       _ref.read(_disciplines.notifier).add(placeholder);
     }
     return (_ref.read(_disciplines)[discId]!);

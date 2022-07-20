@@ -150,6 +150,9 @@ class Runner {
 class RunnerMap extends StateNotifier<Map<int, Runner>> {
   RunnerMap([Map<int, Runner>? initialControls]) : super(initialControls ?? {});
 
+  // mass mark as read will not work on updates fresher than this
+  final _reactionBuffer = const Duration(seconds: 1);
+
   void add(Runner runner) {
     state = {...state, runner.id: runner};
   }
@@ -182,7 +185,11 @@ class RunnerMap extends StateNotifier<Map<int, Runner>> {
     final Map<int, Runner> update = {};
     for (Runner runner in state.values) {
       if (runner.discipline.id == discId &&
-          runner.radioPunches.containsKey(controlId)) {
+          runner.radioPunches.containsKey(controlId) &&
+          !runner.radioPunches[controlId]!.isRead &&
+          DateTime.now()
+                  .difference(runner.radioPunches[controlId]!.receivedAt) >
+              _reactionBuffer) {
         update[runner.id] = runner.togglePunchUpdate(controlId, true);
       }
     }
@@ -191,10 +198,17 @@ class RunnerMap extends StateNotifier<Map<int, Runner>> {
     }
   }
 
+  // TODO above and below
+  // no mark-as-read on too-fresh updates
+  // done above, untested below
+
   void markReadFinishUpdateDiscipline(int discId) {
     final Map<int, Runner> update = {};
     for (Runner runner in state.values) {
-      if (runner.discipline.id == discId && !runner.finishPunch.isRead) {
+      if (runner.discipline.id == discId &&
+          !runner.finishPunch.isRead &&
+          DateTime.now().difference(runner.finishPunch.receivedAt) >
+              _reactionBuffer) {
         update[runner.id] = runner.toggleFinishUpdate(true);
       }
     }
