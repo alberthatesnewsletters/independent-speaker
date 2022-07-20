@@ -7,6 +7,7 @@ import 'model/better_listener.dart';
 import 'model/dataclasses/immutable/control.dart';
 import 'model/dataclasses/immutable/discipline.dart';
 import 'model/dataclasses/immutable/runner.dart';
+import 'model/enums/sorting.dart';
 import 'model/remotes/meos/connection.dart';
 import 'model/remotes/meos/reader.dart';
 import 'utils.dart';
@@ -124,6 +125,18 @@ class TestierWidget extends HookConsumerWidget {
       return titles;
     }
 
+    List<Widget> makeTabs() {
+      List<Widget> tabs = [];
+
+      for (int discId in ref.watch(disciplineMapProvider).keys) {
+        tabs.add(ProviderScope(
+            overrides: [_currentDisciplineId.overrideWithValue(discId)],
+            child: const DisciplineTab()));
+      }
+
+      return tabs;
+    }
+
     return DefaultTabController(
       length: ref.watch(disciplineMapProvider).length,
       child: Column(
@@ -131,12 +144,7 @@ class TestierWidget extends HookConsumerWidget {
           TabBar(labelColor: Colors.blue, tabs: makeTitles()),
           Expanded(
             child: TabBarView(
-              children: [
-                for (int discId in ref.watch(disciplineMapProvider).keys)
-                  ProviderScope(overrides: [
-                    _currentDisciplineId.overrideWithValue(discId)
-                  ], child: const DisciplineTab())
-              ],
+              children: makeTabs(),
             ),
           )
         ],
@@ -153,9 +161,11 @@ class DisciplineTab extends HookConsumerWidget {
     final discId = ref.watch(_currentDisciplineId);
     final controls = ref.watch(disciplineMapProvider)[discId]!.controls;
 
+    // TODO maybe raise state to handle sorting
+
     List<Widget> babySpawner() {
       List<Widget> babbies = [];
-      for (int controlId in controls) {
+      for (int controlId in controls.keys) {
         babbies.add(Column(
           children: [
             Row(
@@ -164,7 +174,12 @@ class DisciplineTab extends HookConsumerWidget {
                     onPressed: () => ref
                         .read(runnerMapProvider.notifier)
                         .markReadPunchUpdateDiscipline(discId, controlId),
-                    child: const Text("Mark all as read"))
+                    child: const Text("Mark all as read")),
+                TextButton(
+                    onPressed: () => ref
+                        .read(disciplineMapProvider.notifier)
+                        .toggleSorting(discId, controlId),
+                    child: const Text("Toggle sorting")),
               ],
             ),
             Expanded(
@@ -199,7 +214,7 @@ class DisciplineTab extends HookConsumerWidget {
     List<Text> adultSpawner() {
       List<Text> mommies = [];
       for (int controlId
-          in ref.watch(disciplineMapProvider)[discId]!.controls) {
+          in ref.watch(disciplineMapProvider)[discId]!.controls.keys) {
         final newsCount = ref
             .watch(runnerMapProvider)
             .values
@@ -250,8 +265,16 @@ class RadioPunches extends HookConsumerWidget {
             runner.radioPunches.containsKey(controlId))
         .toList();
 
-    runners.sort((a, b) => a.radioPunches[controlId]!.punchedAfter
-        .compareTo(b.radioPunches[controlId]!.punchedAfter));
+    final sorting =
+        ref.watch(disciplineMapProvider)[discId]!.controls[controlId]!.sorting;
+
+    if (sorting == Sorting.NewestFirst) {
+      runners.sort((a, b) => a.radioPunches[controlId]!.punchedAt
+          .compareTo(b.radioPunches[controlId]!.punchedAt));
+    } else {
+      runners.sort((a, b) => a.radioPunches[controlId]!.punchedAfter
+          .compareTo(b.radioPunches[controlId]!.punchedAfter));
+    }
 
     return ListView(
       controller: ScrollController(),

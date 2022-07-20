@@ -1,3 +1,4 @@
+import 'package:attempt4/model/dataclasses/immutable/control_settings.dart';
 import 'package:flutter/foundation.dart' show immutable;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,9 +9,9 @@ class Discipline {
 
   final int id;
   final String name;
-  final List<int> controls;
+  final Map<int, ControlSettings> controls;
 
-  Discipline copyWith({required List<int> controls}) {
+  Discipline copyWith({required Map<int, ControlSettings> controls}) {
     return Discipline(id: id, name: name, controls: controls);
   }
 }
@@ -31,8 +32,15 @@ class DisciplineMap extends StateNotifier<Map<int, Discipline>> {
     state = {};
   }
 
-  void edit(Discipline discipline) {
-    print("NYI LOL");
+  void toggleSorting(int discId, int controlId) {
+    if (state.containsKey(discId) &&
+        state[discId]!.controls.containsKey(controlId)) {
+      final controls = state[discId]!.controls;
+      controls[controlId] = controls[controlId]!.toggleSorting();
+      final changedDisc = state[discId]!.copyWith(controls: controls);
+      state = {...state, changedDisc.id: changedDisc};
+      // TODO WE UPDATE THE WHOLE DISCIPLINE STATE BECAUSE WE CHANGE SORTING FOR ONE CONTROL FOR ONE CLASS LOL
+    }
   }
 
   void remove(int id) {
@@ -40,6 +48,5 @@ class DisciplineMap extends StateNotifier<Map<int, Discipline>> {
       for (final e in state.entries)
         if (e.key != id) e.key: e.value,
     };
-    // state = Map.fromEntries(state.entries.where((entry) => entry.key != id));
   }
 }
