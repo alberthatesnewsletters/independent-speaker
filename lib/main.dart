@@ -71,6 +71,10 @@ final _currentControlId = Provider<int>((ref) => throw UnimplementedError());
 
 final runnerDisciplineFilter = StateProvider<int>((_) => 1);
 
+final lalala = StateProvider.family<Runner, int>((ref, currentRunnerId) {
+  return ref.watch(runnerMapProvider)[currentRunnerId]!;
+}); // experiment
+
 final filteredRunners = Provider<List<Runner>>((ref) {
   final filter = ref.watch(runnerDisciplineFilter);
   final runners = ref.watch(runnerMapProvider);
@@ -230,7 +234,7 @@ class DisciplineTab extends HookConsumerWidget {
             .length;
 
         mommies.add(Text(
-          "$controlId: $newsCount",
+          "${ref.watch(disciplineMapProvider)[discId]!.controls[controlId]!.name}: $newsCount",
           style: const TextStyle(fontSize: 30),
         ));
       }
