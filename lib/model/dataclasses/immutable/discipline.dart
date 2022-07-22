@@ -71,8 +71,10 @@ class DisciplineMap extends StateNotifier<Map<int, Discipline>> {
 
   void toggleFinishSorting(int discId) {
     if (state.containsKey(discId)) {
-      final changedDisc = state[discId]!.toggleFinishSorting();
-      state = {...state, changedDisc.id: changedDisc};
+      state = {
+        ...state,
+        ...{discId: state[discId]!.toggleFinishSorting()}
+      };
     }
   }
 
