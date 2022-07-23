@@ -1,24 +1,25 @@
-// TODO pass around instead of global
-
 import 'package:intl/intl.dart';
 
 class Competition {
-  static String name = "";
-  static DateTime? date;
-  static String organizer = "";
-  static String homepage = "";
-  static final DateFormat formatter = DateFormat('yyyy-MM-dd');
+  Competition(
+      {required this.name,
+      required this.date,
+      required this.organizer,
+      required this.homepage});
+  String name = "";
+  DateTime date;
+  String organizer = "";
+  String homepage = "";
+  final DateFormat formatter = DateFormat('yyyy-MM-dd');
 
-  static String toStringStatic() {
+  @override
+  String toString() {
     String thisComp = "";
     thisComp += "Name: ${name == "" ? "<Blank>" : name}\n";
-    thisComp += "Date: $onlyDate\n";
+    thisComp += "Date: ${formatter.format(date)}\n";
     thisComp += "Organizer: ${organizer == "" ? "<Blank>" : organizer}\n";
     thisComp += "Homepage: ${homepage == "" ? "<Blank>" : homepage}";
 
     return thisComp;
   }
-
-  static String get onlyDate =>
-      (date == null ? "<Blank>" : formatter.format(date!));
 }

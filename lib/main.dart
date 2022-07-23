@@ -1,5 +1,7 @@
-import 'package:attempt4/model/dataclasses/immutable/club.dart';
-import 'package:attempt4/model/enums/runner_status.dart';
+import 'model/dataclasses/immutable/club.dart';
+import 'model/enums/runner_status.dart';
+import 'package:attempt4/view/settings.dart';
+import 'package:attempt4/view/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -61,7 +63,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const Scaffold(body: InitWidget()),
+      routes: {
+        "/": (context) => const SplashScreen(),
+        Settings.routeName: (context) => const Settings()
+      },
     );
   }
 }

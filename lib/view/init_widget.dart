@@ -12,11 +12,11 @@ class InitWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final conn = MeOSconnection();
-    final listener = BetterListener(clubMapProvider, controlMapProvider,
-        disciplineMapProvider, runnerMapProvider, ref);
-    final reader = MeOSreader(conn, listener);
-    reader.run();
+    // final conn = MeOSconnection(ip: "192.168.1.139", port: "2009");
+    // final listener = BetterListener(clubMapProvider, controlMapProvider,
+    //     disciplineMapProvider, runnerMapProvider, ref);
+    // final reader = MeOSreader(conn, listener);
+    // reader.run();
     //return const Text("Hello world!");
 
     return const BaseWidget();

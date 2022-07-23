@@ -14,12 +14,13 @@ import '../../../utils.dart';
 import '../../enums/country.dart';
 
 class MeOSreader {
-  MeOSreader(this._conn, this._listener);
+  MeOSreader(this._conn, this._listener, this._competition);
 
   final MeOSconnection _conn;
   final BetterListener _listener;
   int _fullLoads = 0;
   int _errors = 0;
+  final Competition _competition;
 
   static const Map<String, Country> _countryMap = {
     "SWE": Country.Sweden,
@@ -46,12 +47,12 @@ class MeOSreader {
   void _setCompetition(XmlElement compInfo) {
     try {
       // TODO replace forcegets with gets and handle null
-      Competition.name = compInfo.text;
-      Competition.date = DateTime.tryParse(compInfo.forceGetAttribute("date"));
-      Competition.organizer = compInfo.forceGetAttribute("organizer");
-      Competition.homepage = compInfo.forceGetAttribute("homepage");
+
+      _competition.name = compInfo.text;
+      _competition.date = DateTime.parse(compInfo.forceGetAttribute("date"));
+      _competition.organizer = compInfo.forceGetAttribute("organizer");
+      _competition.homepage = compInfo.forceGetAttribute("homepage");
       print("Competition info parsed");
-      print(Competition.date);
     } on Exception catch (e) {
       log(e.toString());
       return;
@@ -290,6 +291,12 @@ class MeOSreader {
 
     //print("Errors: $_errors");
     //_printClubs();
+  }
+
+  Future<void> initialize() async {
+    final XmlDocument compInfo = await _conn.getCompetition();
+    _setCompetition(
+        compInfo.forceGetElement("MOPComplete").forceGetElement("competition"));
   }
 
   Future<void> run() async {

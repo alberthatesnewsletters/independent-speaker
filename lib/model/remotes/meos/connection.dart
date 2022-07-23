@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:attempt4/model/enums/connection_status.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
 
@@ -31,8 +32,68 @@ extension XmlElementExt on XmlElement {
 }
 
 class MeOSconnection {
+  MeOSconnection({required this.ip, required this.port});
+
+  final String ip;
+  final String port;
   String _currentDifference = "zero";
   String _nextDifference = "zero";
+
+  Future<ConnectionStatus> validate() async {
+    try {
+      final response =
+          await http.get(Uri.parse("http://$ip:$port/meos?get=competition"));
+
+      if (response.statusCode != 200) {
+        return ConnectionStatus.Refused;
+      }
+
+      final String body = utf8.decode(response.bodyBytes);
+
+      if (body.startsWith("Error")) {
+        log(body);
+        return ConnectionStatus.Error;
+      }
+
+      final parsedBody = XmlDocument.parse(body).getElement("MOPComplete");
+
+      if (parsedBody == null) {
+        return ConnectionStatus.WeirdMeOS;
+      }
+
+      if (parsedBody.getElement("competition") == null) {
+        return ConnectionStatus.NoCompetition;
+      } else {
+        return ConnectionStatus.Success;
+      }
+    } on Exception catch (e) {
+      log(e.toString(), time: DateTime.now());
+      return ConnectionStatus.NoConnection;
+    }
+  }
+
+  Future<XmlDocument> getCompetition() async {
+    try {
+      final response = await http.get(Uri.parse(
+          "http://${Utils.serverIP}:${Utils.serverPort}/meos?get=competition"));
+
+      if (response.statusCode != 200) {
+        throw Exception("Server refused to grant data");
+      }
+
+      final String body = utf8.decode(response.bodyBytes);
+
+      if (body.startsWith("Error")) {
+        log(body);
+        print("wtf");
+      }
+
+      return XmlDocument.parse(body);
+    } on Exception catch (e) {
+      log(e.toString(), time: DateTime.now());
+      rethrow;
+    }
+  }
 
   Future<XmlDocument> getDifference(
       {bool previousSuccessful = true, bool reset = false}) async {

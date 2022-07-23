@@ -47,17 +47,19 @@ class BaseWidget extends HookConsumerWidget {
       return tabs;
     }
 
-    return DefaultTabController(
-      length: ref.watch(disciplineMapProvider).length,
-      child: Column(
-        children: [
-          TabBar(labelColor: Colors.blue, tabs: makeTitles()),
-          Expanded(
-            child: TabBarView(
-              children: makeTabs(),
-            ),
-          )
-        ],
+    return Scaffold(
+      body: DefaultTabController(
+        length: ref.watch(disciplineMapProvider).length,
+        child: Column(
+          children: [
+            TabBar(labelColor: Colors.blue, tabs: makeTitles()),
+            Expanded(
+              child: TabBarView(
+                children: makeTabs(),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
