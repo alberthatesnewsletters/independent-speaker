@@ -13,7 +13,10 @@ class BaseWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     List<Text> makeTitles() {
       List<Text> titles = [];
-      for (Discipline disc in ref.watch(disciplineMapProvider).values) {
+      for (final disc in ref
+          .watch(disciplineMapProvider)
+          .values
+          .where((element) => element.isFollowed)) {
         int updateCount = 0;
         for (Runner runner in ref.watch(runnerMapProvider).values) {
           if (runner.discipline.id == disc.id) {
@@ -38,9 +41,11 @@ class BaseWidget extends HookConsumerWidget {
     List<Widget> makeTabs() {
       List<Widget> tabs = [];
 
-      for (int discId in ref.watch(disciplineMapProvider).keys) {
+      for (final disc in ref.watch(disciplineMapProvider).values.where(
+            (element) => element.isFollowed,
+          )) {
         tabs.add(ProviderScope(
-            overrides: [currentDisciplineId.overrideWithValue(discId)],
+            overrides: [currentDisciplineId.overrideWithValue(disc.id)],
             child: const DisciplineTab()));
       }
 
@@ -49,7 +54,11 @@ class BaseWidget extends HookConsumerWidget {
 
     return Scaffold(
       body: DefaultTabController(
-        length: ref.watch(disciplineMapProvider).length,
+        length: ref
+            .watch(disciplineMapProvider)
+            .values
+            .where((element) => element.isFollowed)
+            .length,
         child: Column(
           children: [
             TabBar(labelColor: Colors.blue, tabs: makeTitles()),

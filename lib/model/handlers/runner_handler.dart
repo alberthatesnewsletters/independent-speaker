@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../competition.dart';
+import '../dataclasses/immutable/competition.dart';
 import '../dataclasses/immutable/club.dart';
 import '../dataclasses/immutable/discipline.dart';
 import '../dataclasses/immutable/finish_status.dart';
@@ -76,6 +76,7 @@ class RunnerHandler {
       final placeholder = Discipline(
           id: discId,
           name: "PLACEHOLDER",
+          isFollowed: false,
           controls: const {},
           finishSorting: Sorting.NewestFirst);
       _ref.read(_disciplines.notifier).add(placeholder);

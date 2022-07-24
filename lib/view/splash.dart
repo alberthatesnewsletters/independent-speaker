@@ -1,20 +1,22 @@
+import 'package:attempt4/backend.dart';
 import 'package:attempt4/model/remotes/meos/connection.dart';
 import 'package:attempt4/model/remotes/meos/reader.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../main.dart';
 import '../model/better_listener.dart';
 import '../model/enums/connection_status.dart';
 import 'settings.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   final _formKey = GlobalKey<FormState>();
   String? _ip;
   String? _port;
@@ -44,11 +46,15 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     void proceed(MeOSconnection conn) {
-      Navigator.pushNamed(
-        context,
-        Settings.routeName,
-        arguments: conn,
-      );
+      final listener = BetterListener(
+          clubs: clubMapProvider,
+          controls: controlMapProvider,
+          disciplines: disciplineMapProvider,
+          runners: runnerMapProvider,
+          ref: ref);
+      final reader = MeOSreader(conn, listener, ref);
+      reader.run();
+      Navigator.pushNamed(context, "/settings");
     }
 
     Future<void> _errorDialog(String errorMsg) {
@@ -133,30 +139,37 @@ class _SplashScreenState extends State<SplashScreen> {
                             });
 
                             final outcome = await conn.validate();
-                            setState(() {
-                              _isLoading = false;
-                            });
 
-                            switch (outcome) {
-                              // TODO
-                              case ConnectionStatus.Success:
-                                proceed(conn);
-                                break;
-                              case ConnectionStatus.NoCompetition:
-                                _errorDialog("No competition");
-                                break;
-                              case ConnectionStatus.NoConnection:
-                                _errorDialog("No connection");
-                                break;
-                              case ConnectionStatus.WeirdMeOS:
-                                print("Cannot understand MeOS data");
-                                break;
-                              case ConnectionStatus.Error:
-                                print("MeOS couldn't understand us");
-                                break;
-                              case ConnectionStatus.Refused:
-                                print("Server refused connection");
-                                break;
+                            if (outcome == ConnectionStatus.Success) {
+                              setState(() {
+                                _isLoading = false;
+                              });
+                              proceed(conn);
+                            } else {
+                              switch (outcome) {
+                                // TODO
+                                case ConnectionStatus.Success:
+                                  proceed(conn);
+                                  break;
+                                case ConnectionStatus.NoCompetition:
+                                  _errorDialog("No competition");
+                                  break;
+                                case ConnectionStatus.NoConnection:
+                                  _errorDialog("No connection");
+                                  break;
+                                case ConnectionStatus.WeirdMeOS:
+                                  print("Cannot understand MeOS data");
+                                  break;
+                                case ConnectionStatus.Error:
+                                  print("MeOS couldn't understand us");
+                                  break;
+                                case ConnectionStatus.Refused:
+                                  print("Server refused connection");
+                                  break;
+                              }
+                              setState(() {
+                                _isLoading = false;
+                              });
                             }
                           }
                         },

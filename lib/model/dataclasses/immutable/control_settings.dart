@@ -19,8 +19,6 @@ class ControlSettings {
             : Sorting.NewestFirst);
   }
 
-  // TODO Map<int, Map<int, Sorting>> instead of having this in a discipline
-
   ControlSettings newName(String newName) {
     return ControlSettings(id: id, name: newName, sorting: sorting);
   }

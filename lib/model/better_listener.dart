@@ -1,7 +1,7 @@
 // Albert 2022-07-11: "maybe I won't need this class"
 
 import 'package:attempt4/main.dart';
-import 'package:attempt4/model/competition.dart';
+import 'package:attempt4/model/dataclasses/immutable/competition.dart';
 import 'package:attempt4/model/handlers/club_handler.dart';
 import 'package:attempt4/model/handlers/control_handler.dart';
 import 'package:attempt4/model/handlers/discipline_handler.dart';
@@ -23,7 +23,6 @@ class BetterListener {
       required this.controls,
       required this.disciplines,
       required this.runners,
-      required this.competition,
       required this.ref}) {
     _generateHandlers();
   }
@@ -32,7 +31,7 @@ class BetterListener {
   final StateNotifierProvider<ControlMap, Map<int, Control>> controls;
   final StateNotifierProvider<DisciplineMap, Map<int, Discipline>> disciplines;
   final StateNotifierProvider<RunnerMap, Map<int, Runner>> runners;
-  final Competition competition;
+  late final competition = ref.watch(competitionInfoProvider);
   final WidgetRef ref;
 
   late final ClubHandler clubHandler;

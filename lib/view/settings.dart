@@ -1,48 +1,58 @@
 import 'package:attempt4/main.dart';
 import 'package:attempt4/model/remotes/meos/reader.dart';
 
+import '../backend.dart';
 import '../model/better_listener.dart';
-import '../model/competition.dart';
+import '../model/dataclasses/immutable/competition.dart';
 import '../model/remotes/meos/connection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class Settings extends HookConsumerWidget {
+class Settings extends ConsumerStatefulWidget {
   const Settings({Key? key}) : super(key: key);
 
   static const routeName = "/settings";
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final conn = ModalRoute.of(context)!.settings.arguments as MeOSconnection;
-    final competition = Competition(
-        name: "Placeholder",
-        date: DateTime.now(),
-        organizer: "Placeholder",
-        homepage: "Placeholder");
-    final listener = BetterListener(
-        clubs: clubMapProvider,
-        controls: controlMapProvider,
-        disciplines: disciplineMapProvider,
-        runners: runnerMapProvider,
-        competition: competition,
-        ref: ref);
-    final reader = MeOSreader(conn, listener, competition);
-    bool isLoading = true;
+  ConsumerState<ConsumerStatefulWidget> createState() => _SettingState();
+}
 
-    Future<void> initialize() async {
-      await reader.initialize();
-      isLoading = false;
-    }
+class _SettingState extends ConsumerState<Settings> {
+  @override
+  Widget build(BuildContext context) {
+    final disciplines = ref.watch(disciplineMapProvider).values.toList();
+    final competition = ref.watch(competitionInfoProvider);
 
-    initialize();
     return Scaffold(
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : const Text("hello world"),
+      body: Column(
+        children: competition.isPlaceholder
+            ? [const Center(child: CircularProgressIndicator())]
+            : [
+                Text(competition.name),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: disciplines.length,
+                    itemBuilder: ((context, index) {
+                      return ListTile(
+                          title: Text(disciplines[index].name),
+                          tileColor: disciplines[index].isFollowed
+                              ? Colors.green
+                              : Colors.white,
+                          onTap: () => disciplines[index].isFollowed
+                              ? ref
+                                  .read(disciplineMapProvider.notifier)
+                                  .unfollow(disciplines[index].id)
+                              : ref
+                                  .read(disciplineMapProvider.notifier)
+                                  .follow(disciplines[index].id));
+                    }),
+                  ),
+                ),
+                ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, "basewidget"),
+                    child: const Text("Let's go")),
+              ],
+      ),
     );
   }
 }

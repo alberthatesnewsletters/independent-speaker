@@ -9,24 +9,34 @@ class Discipline {
   const Discipline(
       {required this.id,
       required this.name,
+      required this.isFollowed,
       required this.controls,
       required this.finishSorting});
 
   final int id;
   final String name;
+  final bool isFollowed;
   final Map<int, ControlSettings> controls;
   final Sorting finishSorting;
 
   Discipline copyWith({required Map<int, ControlSettings> controls}) {
     return Discipline(
-        id: id, name: name, controls: controls, finishSorting: finishSorting);
+        id: id,
+        name: name,
+        isFollowed: isFollowed,
+        controls: controls,
+        finishSorting: finishSorting);
   }
 
   Discipline? toggleControlSorting(int controlId) {
     if (controls.containsKey(controlId)) {
       controls[controlId] = controls[controlId]!.toggleSorting();
       return Discipline(
-          id: id, name: name, controls: controls, finishSorting: finishSorting);
+          id: id,
+          name: name,
+          isFollowed: isFollowed,
+          controls: controls,
+          finishSorting: finishSorting);
     } else {
       return null;
     }
@@ -36,10 +46,29 @@ class Discipline {
     return Discipline(
         id: id,
         name: name,
+        isFollowed: isFollowed,
         controls: controls,
         finishSorting: finishSorting == Sorting.NewestFirst
             ? Sorting.FastestFirst
             : Sorting.NewestFirst);
+  }
+
+  Discipline follow() {
+    return Discipline(
+        id: id,
+        name: name,
+        isFollowed: true,
+        controls: controls,
+        finishSorting: finishSorting);
+  }
+
+  Discipline unfollow() {
+    return Discipline(
+        id: id,
+        name: name,
+        isFollowed: false,
+        controls: controls,
+        finishSorting: finishSorting);
   }
 }
 
@@ -74,6 +103,26 @@ class DisciplineMap extends StateNotifier<Map<int, Discipline>> {
       state = {
         ...state,
         ...{discId: state[discId]!.toggleFinishSorting()}
+      };
+    }
+  }
+
+  void follow(int discId) {
+    if (state.containsKey(discId)) {
+      final toFollow = state[discId]!.follow();
+      state = {
+        ...state,
+        ...{discId: toFollow}
+      };
+    }
+  }
+
+  void unfollow(int discId) {
+    if (state.containsKey(discId)) {
+      final toUnfollow = state[discId]!.unfollow();
+      state = {
+        ...state,
+        ...{discId: toUnfollow}
       };
     }
   }
