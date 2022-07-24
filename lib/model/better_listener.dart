@@ -1,6 +1,7 @@
 // Albert 2022-07-11: "maybe I won't need this class"
 
 import 'package:attempt4/main.dart';
+import 'package:attempt4/model/dataclasses/immutable/competition.dart';
 import 'package:attempt4/model/handlers/club_handler.dart';
 import 'package:attempt4/model/handlers/control_handler.dart';
 import 'package:attempt4/model/handlers/discipline_handler.dart';
@@ -17,16 +18,21 @@ import 'dataclasses/remote/discipline.dart';
 import 'dataclasses/remote/runner.dart';
 
 class BetterListener {
-  BetterListener(this._clubs, this._controls, this._disciplines, this._runners,
-      this._ref) {
+  BetterListener(
+      {required this.clubs,
+      required this.controls,
+      required this.disciplines,
+      required this.runners,
+      required this.ref}) {
     _generateHandlers();
   }
 
-  final StateNotifierProvider<ClubMap, Map<int, Club>> _clubs;
-  final StateNotifierProvider<ControlMap, Map<int, Control>> _controls;
-  final StateNotifierProvider<DisciplineMap, Map<int, Discipline>> _disciplines;
-  final StateNotifierProvider<RunnerMap, Map<int, Runner>> _runners;
-  final WidgetRef _ref;
+  final StateNotifierProvider<ClubMap, Map<int, Club>> clubs;
+  final StateNotifierProvider<ControlMap, Map<int, Control>> controls;
+  final StateNotifierProvider<DisciplineMap, Map<int, Discipline>> disciplines;
+  final StateNotifierProvider<RunnerMap, Map<int, Runner>> runners;
+  late final competition = ref.watch(competitionInfoProvider);
+  final WidgetRef ref;
 
   late final ClubHandler clubHandler;
   late final ControlHandler controlHandler;
@@ -34,18 +40,18 @@ class BetterListener {
   late final RunnerHandler runnerHandler;
 
   void _generateHandlers() {
-    clubHandler = ClubHandler(_ref, _clubs, _runners);
-    controlHandler = ControlHandler(_controls, _disciplines, _ref);
-    disciplineHandler =
-        DisciplineHandler(_controls, _disciplines, _runners, _ref);
-    runnerHandler = RunnerHandler(_clubs, _disciplines, _runners, _ref);
+    clubHandler = ClubHandler(ref, clubs, runners);
+    controlHandler = ControlHandler(controls, disciplines, ref);
+    disciplineHandler = DisciplineHandler(controls, disciplines, runners, ref);
+    runnerHandler =
+        RunnerHandler(clubs, disciplines, runners, competition, ref);
   }
 
   void wipeInfo() {
-    _ref.read(_clubs.notifier).clear();
-    _ref.read(_controls.notifier).clear();
-    _ref.read(_disciplines.notifier).clear();
-    _ref.read(_runners.notifier).clear();
+    ref.read(clubs.notifier).clear();
+    ref.read(controls.notifier).clear();
+    ref.read(disciplines.notifier).clear();
+    ref.read(runners.notifier).clear();
   }
 
   void processClubs(List<RemoteClub> updates) {

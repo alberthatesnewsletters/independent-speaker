@@ -30,6 +30,7 @@ class DisciplineHandler {
     return Discipline(
         id: discipline.id,
         name: discipline.name,
+        isFollowed: false,
         controls: controls,
         finishSorting: Sorting.NewestFirst);
   }

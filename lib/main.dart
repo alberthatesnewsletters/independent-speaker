@@ -1,5 +1,11 @@
-import 'package:attempt4/model/dataclasses/immutable/club.dart';
-import 'package:attempt4/model/enums/runner_status.dart';
+import 'package:attempt4/model/dataclasses/immutable/competition.dart';
+import 'package:attempt4/view/base_widget.dart';
+
+import 'backend.dart';
+import 'model/dataclasses/immutable/club.dart';
+import 'model/enums/runner_status.dart';
+import 'package:attempt4/view/settings.dart';
+import 'package:attempt4/view/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -25,23 +31,25 @@ import 'view/init_widget.dart';
 //   //runApp(const MyApp());
 // }
 
-final clubMapProvider = StateNotifierProvider<ClubMap, Map<int, Club>>((ref) {
-  return ClubMap();
-});
+final clubMapProvider =
+    StateNotifierProvider<ClubMap, Map<int, Club>>((ref) => ClubMap());
 
 final controlMapProvider =
-    StateNotifierProvider<ControlMap, Map<int, Control>>((ref) {
-  return ControlMap();
-});
+    StateNotifierProvider<ControlMap, Map<int, Control>>((ref) => ControlMap());
 
 final disciplineMapProvider =
-    StateNotifierProvider<DisciplineMap, Map<int, Discipline>>((ref) {
-  return DisciplineMap();
-});
+    StateNotifierProvider<DisciplineMap, Map<int, Discipline>>(
+        (ref) => DisciplineMap());
 
 final runnerMapProvider =
-    StateNotifierProvider<RunnerMap, Map<int, Runner>>((ref) {
-  return RunnerMap();
+    StateNotifierProvider<RunnerMap, Map<int, Runner>>((ref) => RunnerMap());
+
+final competitionInfoProvider =
+    StateNotifierProvider<CompetitionInfo, Competition>(
+        (ref) => CompetitionInfo());
+
+final backendInfoProvider = StateNotifierProvider<BackendInfo, Backend>((ref) {
+  throw UnimplementedError();
 });
 
 Future<void> main() async {
@@ -61,7 +69,15 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const Scaffold(body: InitWidget()),
+      routes: {
+        "/": (context) => const SplashScreen(),
+        Settings.routeName: (context) {
+          // final backend = ModalRoute.of(context)!.settings.arguments as Backend;
+
+          return const Settings(); // TODO less string reliance, like here
+        },
+        "basewidget": (context) => const BaseWidget()
+      },
     );
   }
 }
