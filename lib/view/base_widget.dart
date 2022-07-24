@@ -1,3 +1,4 @@
+import 'package:attempt4/view/all_runners_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -13,6 +14,19 @@ class BaseWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     List<Text> makeTitles() {
       List<Text> titles = [];
+
+      final allRunners = ref.watch(runnerMapProvider).values;
+      int updateCount = 0;
+      for (Runner runner in allRunners) {
+        if (runner.finishPunch.isPunched && !runner.finishPunch.isRead) {
+          updateCount++;
+        }
+      }
+      titles.add(Text(
+        "All classes: $updateCount",
+        style: const TextStyle(fontSize: 30),
+      ));
+
       for (final disc in ref
           .watch(disciplineMapProvider)
           .values
@@ -41,6 +55,8 @@ class BaseWidget extends HookConsumerWidget {
     List<Widget> makeTabs() {
       List<Widget> tabs = [];
 
+      tabs.add(const AllRunnersTab());
+
       for (final disc in ref.watch(disciplineMapProvider).values.where(
             (element) => element.isFollowed,
           )) {
@@ -55,10 +71,11 @@ class BaseWidget extends HookConsumerWidget {
     return Scaffold(
       body: DefaultTabController(
         length: ref
-            .watch(disciplineMapProvider)
-            .values
-            .where((element) => element.isFollowed)
-            .length,
+                .watch(disciplineMapProvider)
+                .values
+                .where((element) => element.isFollowed)
+                .length +
+            1,
         child: Column(
           children: [
             TabBar(labelColor: Colors.blue, tabs: makeTitles()),

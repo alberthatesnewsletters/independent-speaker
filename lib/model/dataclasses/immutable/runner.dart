@@ -206,6 +206,7 @@ class RunnerMap extends StateNotifier<Map<int, Runner>> {
     final Map<int, Runner> update = {};
     for (Runner runner in state.values) {
       if (runner.discipline.id == discId &&
+          runner.finishPunch.isPunched &&
           !runner.finishPunch.isRead &&
           DateTime.now().difference(runner.finishPunch.receivedAt) >
               _reactionBuffer) {
@@ -214,6 +215,21 @@ class RunnerMap extends StateNotifier<Map<int, Runner>> {
     }
     if (update.isNotEmpty) {
       state = {...state, ...update};
+    }
+  }
+
+  void markFinishReadAll() {
+    final Map<int, Runner> update = {};
+    for (Runner runner in state.values) {
+      if (runner.finishPunch.isPunched &&
+          !runner.finishPunch.isRead &&
+          DateTime.now().difference(runner.finishPunch.receivedAt) >
+              _reactionBuffer) {
+        update[runner.id] = runner.toggleFinishUpdate(true);
+      }
+      if (update.isNotEmpty) {
+        state = {...state, ...update};
+      }
     }
   }
 

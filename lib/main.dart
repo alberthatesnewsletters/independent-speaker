@@ -17,7 +17,6 @@ import 'model/enums/sorting.dart';
 import 'model/remotes/meos/connection.dart';
 import 'model/remotes/meos/reader.dart';
 import 'utils.dart';
-import 'view/init_widget.dart';
 
 // Future<void> main() async {
 //   Utils.serverIP = "192.168.1.139";
