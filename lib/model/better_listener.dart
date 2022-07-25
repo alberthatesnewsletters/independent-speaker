@@ -43,8 +43,7 @@ class BetterListener {
     clubHandler = ClubHandler(ref, clubs, runners);
     controlHandler = ControlHandler(controls, disciplines, ref);
     disciplineHandler = DisciplineHandler(controls, disciplines, runners, ref);
-    runnerHandler =
-        RunnerHandler(clubs, disciplines, runners, competition, ref);
+    runnerHandler = RunnerHandler(clubs, disciplines, runners, ref);
   }
 
   void wipeInfo() {

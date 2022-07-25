@@ -1,6 +1,6 @@
+import '../../main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../dataclasses/immutable/competition.dart';
 import '../dataclasses/immutable/club.dart';
 import '../dataclasses/immutable/discipline.dart';
 import '../dataclasses/immutable/finish_status.dart';
@@ -12,13 +12,11 @@ import '../enums/runner_status.dart';
 import '../enums/sorting.dart';
 
 class RunnerHandler {
-  RunnerHandler(this._clubs, this._disciplines, this._runners,
-      this._competition, this._ref);
+  RunnerHandler(this._clubs, this._disciplines, this._runners, this._ref);
 
   final StateNotifierProvider<ClubMap, Map<int, Club>> _clubs;
   final StateNotifierProvider<DisciplineMap, Map<int, Discipline>> _disciplines;
   final StateNotifierProvider<RunnerMap, Map<int, Runner>> _runners;
-  final Competition _competition;
   final WidgetRef _ref;
   final int _batchUpdateThreshold = 3; // number pulled out of my ass
   final DateTime _placeHolderTime = DateTime(2000);
@@ -86,8 +84,12 @@ class RunnerHandler {
     return (_ref.read(_disciplines)[discId]!);
   }
 
+  // TODO these all need to be recalculated if competition date changes
   DateTime _determineStartTime(int milliseconds) {
-    return _competition.date.add(Duration(milliseconds: milliseconds));
+    return _ref
+        .read(competitionInfoProvider)
+        .date
+        .add(Duration(milliseconds: milliseconds));
   }
 
   Duration _determineRunningTime(int milliseconds) {

@@ -73,7 +73,7 @@ class BaseWidget extends HookConsumerWidget {
       appBar: AppBar(
         title: Center(
             child: Text(
-          ref.watch(competitionInfoProvider).name,
+          "${ref.watch(competitionInfoProvider).name} ${ref.watch(competitionInfoProvider).date}",
           style: const TextStyle(fontSize: 30),
         )),
         actions: [
