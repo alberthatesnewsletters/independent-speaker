@@ -59,7 +59,8 @@ class RunnerPunchItem extends HookConsumerWidget {
     }
 
     return ListTile(
-      title: Text(runner.name),
+      title:
+          Text("${runner.radioPunches[controlId]!.placement} : ${runner.name}"),
       subtitle: Text(runner.radioPunches[controlId]!.punchedAfter.toString()),
       tileColor:
           runner.radioPunches[controlId]!.isRead ? Colors.white : Colors.green,

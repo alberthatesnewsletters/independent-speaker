@@ -31,6 +31,7 @@ class RunnerHandler {
                 .add(_determineRunningTime(entry.value)),
             punchedAfter: (_determineRunningTime(entry.value)),
             isRead: false,
+            placement: null, // TODO
             receivedAt: DateTime.now())
     };
 
@@ -44,6 +45,7 @@ class RunnerHandler {
             ? _determineRunningTime(runner.runningTime)
             : const Duration(milliseconds: 0),
         receivedAt: DateTime.now(),
+        placement: null, // TODO
         isRead: false);
 
     return Runner(
@@ -99,23 +101,118 @@ class RunnerHandler {
 
   void _handleMultipleRunners(List<RemoteRunner> updates) {
     final Map<int, Runner> toSend = {};
+    final Map<int, Set<int>> discRadioChecks = {};
+    final Map<int, bool> discFinishChecks = {};
     for (final runner in updates) {
       if (runner.isDeletion) {
         _deleteRunner(runner);
       } else if (_ref.read(_runners).containsKey(runner.id)) {
         _updateRunner(runner);
       } else {
-        toSend[runner.id] = _generateRunner(runner);
+        final newRunner = _generateRunner(runner);
+        toSend[runner.id] = newRunner;
+
+        if (discRadioChecks.containsKey(newRunner.discipline.id)) {
+          discRadioChecks[newRunner.discipline.id]!
+              .addAll(newRunner.radioPunches.keys.toSet());
+        } else {
+          discRadioChecks[newRunner.discipline.id] =
+              newRunner.radioPunches.keys.toSet();
+        }
+
+        if (discFinishChecks.containsKey(newRunner.discipline.id)) {
+          if (discFinishChecks[newRunner.discipline.id] == false) {
+            discFinishChecks[newRunner.discipline.id] =
+                newRunner.finishPunch.isPunched;
+          }
+        } else {
+          discFinishChecks[newRunner.discipline.id] =
+              newRunner.finishPunch.isPunched;
+        }
       }
     }
     _ref.read(_runners.notifier).batchAdd(toSend);
+
+    for (final toCalculate in discRadioChecks.entries) {
+      _determinePlacements(toCalculate.key, toCalculate.value,
+          discFinishChecks[toCalculate.key]!);
+    }
+  }
+
+  void _determinePlacements(
+      int discId, Set<int> radiosToCalculate, bool calculateFinish) {
+    for (final radioPunch in radiosToCalculate) {
+      final currentStandings = _ref
+          .read(_runners)
+          .values
+          .where((element) =>
+              element.discipline.id == discId &&
+              element.radioPunches.containsKey(radioPunch))
+          .toList();
+
+      currentStandings.sort((a, b) => a.radioPunches[radioPunch]!.punchedAfter
+          .compareTo(b.radioPunches[radioPunch]!.punchedAfter));
+
+      Map<int, Runner> updatedRunners = {};
+      for (int i = 0; i < currentStandings.length; i++) {
+        final updatedRunner =
+            currentStandings[i].newRadioPlacement(radioPunch, i + 1);
+        if (updatedRunner != null) {
+          updatedRunners[updatedRunner.id] = updatedRunner;
+        }
+      }
+      _ref.read(_runners.notifier).batchAdd(updatedRunners);
+    }
+
+    if (calculateFinish) {
+      final currentStandings = _ref
+          .read(_runners)
+          .values
+          .where((element) =>
+              element.discipline.id == discId && element.finishPunch.isPunched)
+          .toList();
+
+      currentStandings.sort((a, b) =>
+          a.finishPunch.punchedAfter.compareTo(b.finishPunch.punchedAfter));
+
+      Map<int, Runner> updatedRunners = {};
+      for (int i = 0; i < currentStandings.length; i++) {
+        final updatedRunner = currentStandings[i].newFinishPlacement(i + 1);
+        if (updatedRunner != null) {
+          updatedRunners[updatedRunner.id] = updatedRunner;
+        }
+      }
+      _ref.read(_runners.notifier).batchAdd(updatedRunners);
+    }
   }
 
   void _updateRunner(RemoteRunner update) {
     final updatedRunner = _generateRunner(update);
+    final currentRunner = _ref.read(_runners)[update.id]!;
+    Set<int> radiosToCheck = {};
+    bool checkFinish = false;
+
+    for (final radioPunch in updatedRunner.radioPunches.entries) {
+      if (currentRunner.radioPunches.containsKey(radioPunch.key)) {
+        if (currentRunner.radioPunches[radioPunch.key]!
+            .hasSameTimes(radioPunch.value)) {
+          radiosToCheck.add(radioPunch.key);
+        }
+      } else {
+        radiosToCheck.add(radioPunch.key);
+      }
+    }
+
+    if (updatedRunner.finishPunch.isPunched &&
+        !updatedRunner.finishPunch.hasSameTimes(currentRunner.finishPunch)) {
+      checkFinish = true;
+    }
+
     _ref
         .read(_runners.notifier)
         .add(_ref.read(_runners)[update.id]!.updateFrom(updatedRunner));
+
+    _determinePlacements(update.discId, radiosToCheck, checkFinish);
   }
 
   void _handleSingleRunner(RemoteRunner update) {
@@ -125,7 +222,12 @@ class RunnerHandler {
       _updateRunner(update);
     } else {
       final newRunner = _generateRunner(update);
+      final radiosToCheck = update.radioTimes.keys.toSet();
+      final checkFinish = update.isFinished;
+
       _ref.read(_runners.notifier).add(newRunner);
+
+      _determinePlacements(update.discId, radiosToCheck, checkFinish);
     }
   }
 
