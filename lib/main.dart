@@ -1,5 +1,7 @@
 import 'package:attempt4/model/dataclasses/immutable/competition.dart';
+import 'package:attempt4/model/dataclasses/immutable/current_time.dart';
 import 'package:attempt4/view/base_widget.dart';
+import 'package:flutter/scheduler.dart';
 
 import 'backend.dart';
 import 'model/dataclasses/immutable/club.dart';
@@ -47,13 +49,19 @@ final competitionInfoProvider =
     StateNotifierProvider<CompetitionInfo, Competition>(
         (ref) => CompetitionInfo());
 
-final backendInfoProvider = StateNotifierProvider<BackendInfo, Backend>((ref) {
-  throw UnimplementedError();
-});
+final currentTimeProvider =
+    StateNotifierProvider<CurrentTimeNotifier, CurrentTime>(
+        (ref) => CurrentTimeNotifier());
 
-// TODO victory
+// final backendInfoProvider = StateNotifierProvider<BackendInfo, Backend>((ref) {
+//   throw UnimplementedError();
+// });
+
 void updateTime(WidgetRef ref) async {
-  ref.read(currentTime);
+  while (true) {
+    ref.read(currentTimeProvider.notifier).update(DateTime.now());
+    await Future.delayed(const Duration(seconds: 1));
+  }
 }
 
 Future<void> main() async {
@@ -63,8 +71,19 @@ Future<void> main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({Key? key}) : super(key: key);
+
+  @override
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    updateTime(ref);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +110,6 @@ final currentDisciplineId = Provider<int>((ref) => throw UnimplementedError());
 final currentControlId = Provider<int>((ref) => throw UnimplementedError());
 final currentForewarnIsFinish =
     Provider<bool>((ref) => throw UnimplementedError());
-final currentTime = Provider<DateTime>((ref) => throw UnimplementedError());
 
 final runnerDisciplineFilter = StateProvider<int>((_) => 1);
 

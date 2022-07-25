@@ -25,7 +25,7 @@ class InfoTab extends HookConsumerWidget {
         .values
         .where((element) =>
             element.discipline.id == currentDiscId &&
-            (element.status == RunnerStatus.Unknown ||
+            (element.status == RunnerStatus.Unknown &&
                 !element.finishPunch.isPunched))
         .toList()
         .length;
