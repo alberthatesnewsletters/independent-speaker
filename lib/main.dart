@@ -51,6 +51,11 @@ final backendInfoProvider = StateNotifierProvider<BackendInfo, Backend>((ref) {
   throw UnimplementedError();
 });
 
+// TODO victory
+void updateTime(WidgetRef ref) async {
+  ref.read(currentTime);
+}
+
 Future<void> main() async {
   Utils.serverIP = "192.168.1.139";
   Utils.serverPort = "2009";
@@ -84,6 +89,9 @@ class MyApp extends StatelessWidget {
 final currentRunner = Provider<Runner>((ref) => throw UnimplementedError());
 final currentDisciplineId = Provider<int>((ref) => throw UnimplementedError());
 final currentControlId = Provider<int>((ref) => throw UnimplementedError());
+final currentForewarnIsFinish =
+    Provider<bool>((ref) => throw UnimplementedError());
+final currentTime = Provider<DateTime>((ref) => throw UnimplementedError());
 
 final runnerDisciplineFilter = StateProvider<int>((_) => 1);
 

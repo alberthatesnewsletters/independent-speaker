@@ -1,3 +1,4 @@
+import 'package:attempt4/view/forewarn_tab.dart';
 import 'package:attempt4/view/info_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -48,8 +49,17 @@ class DisciplineTab extends HookConsumerWidget {
             ),
             Expanded(
               child: ProviderScope(
-                  overrides: [currentControlId.overrideWithValue(controlId)],
-                  child: const RadioPunches()),
+                overrides: [
+                  currentControlId.overrideWithValue(controlId),
+                  currentForewarnIsFinish.overrideWithValue(false)
+                ],
+                child: Row(
+                  children: const [
+                    Expanded(child: RadioPunches()),
+                    Expanded(child: ForewarnTab()),
+                  ],
+                ),
+              ),
             ),
           ],
         ));
@@ -71,8 +81,16 @@ class DisciplineTab extends HookConsumerWidget {
                   child: const Text("Toggle sorting")),
             ],
           ),
-          const Expanded(
-            child: Finishes(),
+          Expanded(
+            child: ProviderScope(
+              overrides: [currentForewarnIsFinish.overrideWithValue(true)],
+              child: Row(
+                children: const [
+                  Expanded(child: Finishes()),
+                  Expanded(child: ForewarnTab())
+                ],
+              ),
+            ),
           ),
         ],
       ));
