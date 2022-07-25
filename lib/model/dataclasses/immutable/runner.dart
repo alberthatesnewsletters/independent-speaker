@@ -98,6 +98,49 @@ class Runner {
         updatedAt: DateTime.now());
   }
 
+  Runner? newRadioPlacement(int radio, int placement) {
+    if (radioPunches[radio]!.placement != placement) {
+      radioPunches[radio] = radioPunches[radio]!.copyWith(placement: placement);
+      return Runner(
+          id: id,
+          name: name,
+          club: club,
+          discipline: discipline,
+          country: country,
+          numberBib: numberBib,
+          status: status,
+          hasNoClub: hasNoClub,
+          radioPunches: radioPunches,
+          finishPunch: finishPunch,
+          startTime: startTime,
+          hasStatusUpdate: hasStatusUpdate,
+          updatedAt: updatedAt);
+    } else {
+      return null;
+    }
+  }
+
+  Runner? newFinishPlacement(int placement) {
+    if (finishPunch.placement != placement) {
+      return Runner(
+          id: id,
+          name: name,
+          club: club,
+          discipline: discipline,
+          country: country,
+          numberBib: numberBib,
+          status: status,
+          hasNoClub: hasNoClub,
+          radioPunches: radioPunches,
+          finishPunch: finishPunch.copyWith(placement: placement),
+          startTime: startTime,
+          hasStatusUpdate: hasStatusUpdate,
+          updatedAt: updatedAt);
+    } else {
+      return null;
+    }
+  }
+
 // TODO confusing boolean name
   Runner togglePunchUpdate(int controlId, bool markAsRead) {
     if (radioPunches.containsKey(controlId)) {

@@ -9,6 +9,7 @@ class FinishStatus extends PunchStatus {
       required super.punchedAt,
       required super.punchedAfter,
       required super.receivedAt,
+      required super.placement,
       required super.isRead});
 
   final bool isPunched;
@@ -18,7 +19,8 @@ class FinishStatus extends PunchStatus {
       {bool? isPunched,
       DateTime? punchedAt,
       Duration? punchedAfter,
-      bool? isRead}) {
+      bool? isRead,
+      int? placement}) {
     if (punchedAt != null || punchedAfter != null) {
       isRead = false;
     }
@@ -28,6 +30,7 @@ class FinishStatus extends PunchStatus {
         punchedAt: punchedAt ?? this.punchedAt,
         punchedAfter: punchedAfter ?? this.punchedAfter,
         receivedAt: (isRead != null && !isRead) ? DateTime.now() : receivedAt,
+        placement: placement ?? this.placement,
         isRead: isRead ?? this.isRead);
   }
 }

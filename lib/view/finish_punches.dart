@@ -54,7 +54,7 @@ class RunnerFinishItem extends HookConsumerWidget {
     }
 
     return ListTile(
-      title: Text(runner.name),
+      title: Text("${runner.finishPunch.placement} : ${runner.name}"),
       subtitle: Text(runner.finishPunch.punchedAfter.toString()),
       tileColor: runner.finishPunch.isRead ? Colors.white : Colors.green,
       onTap: _tapped,
