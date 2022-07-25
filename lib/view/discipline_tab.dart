@@ -1,3 +1,4 @@
+import 'package:attempt4/view/info_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -17,6 +18,17 @@ class DisciplineTab extends HookConsumerWidget {
 
     List<Widget> babySpawner() {
       List<Widget> babbies = [];
+
+      babbies.add(Column(
+        children: [
+          Expanded(
+            child: ProviderScope(
+                overrides: [currentDisciplineId.overrideWithValue(discId)],
+                child: const InfoTab()),
+          ),
+        ],
+      ));
+
       for (int controlId in controls.keys) {
         babbies.add(Column(
           children: [
@@ -70,6 +82,12 @@ class DisciplineTab extends HookConsumerWidget {
 
     List<Text> adultSpawner() {
       List<Text> mommies = [];
+
+      mommies.add(const Text(
+        "Info",
+        style: TextStyle(fontSize: 30),
+      ));
+
       for (int controlId
           in ref.watch(disciplineMapProvider)[discId]!.controls.keys) {
         final newsCount = ref
@@ -103,7 +121,7 @@ class DisciplineTab extends HookConsumerWidget {
     }
 
     return DefaultTabController(
-      length: controls.length + 1,
+      length: controls.length + 2,
       child: Column(
         children: [
           TabBar(labelColor: Colors.blue, tabs: adultSpawner()),
