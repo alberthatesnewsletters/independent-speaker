@@ -1,4 +1,5 @@
 import 'package:attempt4/view/all_runners_tab.dart';
+import 'package:attempt4/view/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -69,6 +70,34 @@ class BaseWidget extends HookConsumerWidget {
     }
 
     return Scaffold(
+      appBar: AppBar(
+        title: Center(
+            child: Text(
+          ref.watch(competitionInfoProvider).name,
+          style: const TextStyle(fontSize: 30),
+        )),
+        actions: [
+          PopupMenuButton(
+            itemBuilder: (context) {
+              // TODO enum instead of ints
+              return const [
+                PopupMenuItem<int>(
+                  value: 0,
+                  child: Text("I am happy"),
+                ),
+                PopupMenuItem<int>(value: 1, child: Text("Settings")),
+              ];
+            },
+            onSelected: (value) {
+              if (value == 0) {
+                print("User is happy");
+              } else if (value == 1) {
+                Navigator.pushNamed(context, Settings.routeName);
+              }
+            },
+          )
+        ],
+      ),
       body: DefaultTabController(
         length: ref
                 .watch(disciplineMapProvider)
