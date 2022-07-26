@@ -1,3 +1,4 @@
+import 'package:attempt4/model/dataclasses/immutable/current_time.dart';
 import 'package:attempt4/model/dataclasses/immutable/punch_status.dart';
 import 'package:flutter/foundation.dart' show immutable;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,6 +61,17 @@ class Runner {
   }
 
   Map<int, PunchStatus> _determinePunchUpdates(Runner update) {
+    List<int> toRemove = [];
+    for (final currentPunch in radioPunches.keys) {
+      if (!update.radioPunches.keys.contains(currentPunch)) {
+        toRemove.add(currentPunch);
+      }
+    }
+
+    for (final removeMe in toRemove) {
+      radioPunches.remove(removeMe);
+    }
+
     for (final newPunch in update.radioPunches.entries) {
       if (radioPunches.containsKey(newPunch.key)) {
         if (!radioPunches[newPunch.key]!.hasSameTimes(newPunch.value)) {
