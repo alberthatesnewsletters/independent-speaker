@@ -1,6 +1,8 @@
 import 'package:attempt4/model/dataclasses/immutable/competition.dart';
 import 'package:attempt4/model/dataclasses/immutable/current_time.dart';
+import 'package:attempt4/model/dataclasses/immutable/update_tier.dart';
 import 'package:attempt4/view/base_widget.dart';
+import 'package:attempt4/view/update_settings.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'backend.dart';
@@ -53,6 +55,10 @@ final currentTimeProvider =
     StateNotifierProvider<CurrentTimeNotifier, CurrentTime>(
         (ref) => CurrentTimeNotifier());
 
+final updateTierNotifier =
+    StateNotifierProvider<UpdateTierNotifier, UpdateTier>(
+        (ref) => UpdateTierNotifier());
+
 // final backendInfoProvider = StateNotifierProvider<BackendInfo, Backend>((ref) {
 //   throw UnimplementedError();
 // });
@@ -98,6 +104,9 @@ class _MyAppState extends ConsumerState<MyApp> {
           // final backend = ModalRoute.of(context)!.settings.arguments as Backend;
 
           return const Settings(); // TODO less string reliance, like here
+        },
+        UpdateSettings.routeName: (context) {
+          return const UpdateSettings();
         },
         "basewidget": (context) => const BaseWidget()
       },

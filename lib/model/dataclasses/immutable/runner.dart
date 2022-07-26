@@ -61,16 +61,10 @@ class Runner {
   }
 
   Map<int, PunchStatus> _determinePunchUpdates(Runner update) {
-    List<int> toRemove = [];
-    for (final currentPunch in radioPunches.keys) {
-      if (!update.radioPunches.keys.contains(currentPunch)) {
-        toRemove.add(currentPunch);
-      }
-    }
+    radioPunches
+        .removeWhere((key, value) => !update.radioPunches.keys.contains(key));
 
-    for (final removeMe in toRemove) {
-      radioPunches.remove(removeMe);
-    }
+    radioPunches.addEntries(update.radioPunches.entries);
 
     for (final newPunch in update.radioPunches.entries) {
       if (radioPunches.containsKey(newPunch.key)) {
@@ -114,6 +108,7 @@ class Runner {
     if (radioPunches[radio]!.placement != placement) {
       radioPunches[radio] = radioPunches[radio]!.copyWith(placement: placement);
       return Runner(
+          // TODO return 'this'?
           id: id,
           name: name,
           club: club,
