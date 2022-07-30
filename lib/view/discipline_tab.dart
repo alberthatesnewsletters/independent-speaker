@@ -14,6 +14,7 @@ class DisciplineTab extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final discId = ref.watch(currentDisciplineId);
     final controls = ref.watch(disciplineMapProvider)[discId]!.controls;
+    final updateSettings = ref.watch(updateTierNotifier);
 
     // TODO maybe raise state to handle sorting
 
@@ -98,48 +99,261 @@ class DisciplineTab extends HookConsumerWidget {
       return babbies;
     }
 
-    List<Text> adultSpawner() {
-      List<Text> mommies = [];
+    List<Card> adultSpawner() {
+      List<Card> mommies = [];
 
-      mommies.add(const Text(
-        "Info",
-        style: TextStyle(fontSize: 30),
+      mommies.add(const Card(
+        child: Text(
+          "Info",
+          style: TextStyle(fontSize: 30),
+        ),
       ));
 
       for (int controlId
           in ref.watch(disciplineMapProvider)[discId]!.controls.keys) {
-        final newsCount = ref
-            .watch(runnerMapProvider)
-            .values
-            .where((element) =>
-                element.discipline.id == discId &&
-                element.radioPunches.containsKey(controlId) &&
-                !element.radioPunches[controlId]!.isRead)
-            .length;
+        int tierOneUpdates = 0;
+        int tierTwoUpdates = 0;
+        int tierThreeUpdates = 0;
 
-        mommies.add(Text(
-          "${ref.watch(disciplineMapProvider)[discId]!.controls[controlId]!.name}: $newsCount",
-          style: const TextStyle(fontSize: 30),
+        if (updateSettings.enableTierOne) {
+          if (updateSettings.tierOneLimit == null) {
+            tierOneUpdates += ref
+                .watch(runnerMapProvider)
+                .values
+                .where((element) =>
+                    element.discipline.id == discId &&
+                    element.radioPunches.containsKey(controlId) &&
+                    !element.radioPunches[controlId]!.isRead)
+                .length;
+          } else {
+            tierOneUpdates += ref
+                .watch(runnerMapProvider)
+                .values
+                .where((element) => element.discipline.id == discId &&
+                        element.radioPunches.containsKey(controlId) &&
+                        !element.radioPunches[controlId]!.isRead &&
+                        element.radioPunches[controlId]!.placement != null
+                    ? element.radioPunches[controlId]!.placement! <=
+                        updateSettings.tierOneLimit!
+                    : false)
+                .length;
+
+            if (updateSettings.enableTierTwo) {
+              if (updateSettings.tierTwoLimit == null) {
+                tierTwoUpdates += ref
+                    .watch(runnerMapProvider)
+                    .values
+                    .where((element) => element.discipline.id == discId &&
+                            element.radioPunches.containsKey(controlId) &&
+                            !element.radioPunches[controlId]!.isRead &&
+                            element.radioPunches[controlId]!.placement != null
+                        ? element.radioPunches[controlId]!.placement! >
+                            updateSettings.tierOneLimit!
+                        : false)
+                    .length;
+              } else {
+                tierTwoUpdates += ref
+                    .watch(runnerMapProvider)
+                    .values
+                    .where((element) => element.discipline.id == discId &&
+                            element.radioPunches.containsKey(controlId) &&
+                            !element.radioPunches[controlId]!.isRead &&
+                            element.radioPunches[controlId]!.placement != null
+                        ? (element.radioPunches[controlId]!.placement! >
+                                updateSettings.tierOneLimit! &&
+                            element.radioPunches[controlId]!.placement! <=
+                                updateSettings.tierTwoLimit!)
+                        : false)
+                    .length;
+                if (updateSettings.enableTierThree) {
+                  if (updateSettings.tierThreeLimit == null) {
+                    tierThreeUpdates += ref
+                        .watch(runnerMapProvider)
+                        .values
+                        .where((element) => element.discipline.id == discId &&
+                                element.radioPunches.containsKey(controlId) &&
+                                !element.radioPunches[controlId]!.isRead &&
+                                element.radioPunches[controlId]!.placement !=
+                                    null
+                            ? element.radioPunches[controlId]!.placement! >
+                                updateSettings.tierTwoLimit!
+                            : false)
+                        .length;
+                  } else {
+                    tierThreeUpdates += ref
+                        .watch(runnerMapProvider)
+                        .values
+                        .where((element) => element.discipline.id == discId &&
+                                element.radioPunches.containsKey(controlId) &&
+                                !element.radioPunches[controlId]!.isRead &&
+                                element.radioPunches[controlId]!.placement !=
+                                    null
+                            ? (element.radioPunches[controlId]!.placement! >
+                                    updateSettings.tierTwoLimit! &&
+                                element.radioPunches[controlId]!.placement! <=
+                                    updateSettings.tierThreeLimit!)
+                            : false)
+                        .length;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        mommies.add(Card(
+          child: Column(
+            children: [
+              Text(
+                ref
+                    .watch(disciplineMapProvider)[discId]!
+                    .controls[controlId]!
+                    .name,
+                style: const TextStyle(fontSize: 30),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Text(
+                    tierOneUpdates == 0 ? "" : tierOneUpdates.toString(),
+                    style: const TextStyle(
+                        color: Colors.blue, fontWeight: FontWeight.bold),
+                  ),
+                  Text(tierTwoUpdates == 0 ? "" : tierTwoUpdates.toString(),
+                      style: const TextStyle(
+                          color: Colors.green, fontWeight: FontWeight.bold)),
+                  Text(tierThreeUpdates == 0 ? "" : tierThreeUpdates.toString(),
+                      style: const TextStyle(
+                          color: Colors.orange, fontWeight: FontWeight.bold))
+                ],
+              ),
+            ],
+          ),
         ));
       }
 
-      // const okStatuses = {RunnerStatus.Ok, RunnerStatus.OkNoTime};
+      int tierOneUpdates = 0;
+      int tierTwoUpdates = 0;
+      int tierThreeUpdates = 0;
 
-      final newsCount = ref
-          .watch(runnerMapProvider)
-          .values
-          .where((element) =>
-              element.discipline.id == discId &&
-              element.finishPunch.isPunched &&
-              !element.finishPunch.isRead)
-          .length;
-      mommies.add(
-          Text("Finish: $newsCount", style: const TextStyle(fontSize: 30)));
+      if (updateSettings.enableTierOne) {
+        if (updateSettings.tierOneLimit == null) {
+          tierOneUpdates += ref
+              .watch(runnerMapProvider)
+              .values
+              .where((element) =>
+                  element.discipline.id == discId &&
+                  element.finishPunch.isPunched &&
+                  !element.finishPunch.isRead)
+              .length;
+        } else {
+          tierOneUpdates += ref
+              .watch(runnerMapProvider)
+              .values
+              .where((element) => element.discipline.id == discId &&
+                      element.finishPunch.isPunched &&
+                      !element.finishPunch.isRead &&
+                      element.finishPunch.placement != null
+                  ? element.finishPunch.placement! <=
+                      updateSettings.tierOneLimit!
+                  : false)
+              .length;
+
+          if (updateSettings.enableTierTwo) {
+            if (updateSettings.tierTwoLimit == null) {
+              tierTwoUpdates += ref
+                  .watch(runnerMapProvider)
+                  .values
+                  .where((element) => element.discipline.id == discId &&
+                          element.finishPunch.isPunched &&
+                          !element.finishPunch.isRead &&
+                          element.finishPunch.placement != null
+                      ? element.finishPunch.placement! >
+                          updateSettings.tierOneLimit!
+                      : false)
+                  .length;
+            } else {
+              tierTwoUpdates += ref
+                  .watch(runnerMapProvider)
+                  .values
+                  .where((element) => element.discipline.id == discId &&
+                          element.finishPunch.isPunched &&
+                          !element.finishPunch.isRead &&
+                          element.finishPunch.placement != null
+                      ? (element.finishPunch.placement! >
+                              updateSettings.tierOneLimit! &&
+                          element.finishPunch.placement! <=
+                              updateSettings.tierTwoLimit!)
+                      : false)
+                  .length;
+              if (updateSettings.enableTierThree) {
+                if (updateSettings.tierThreeLimit == null) {
+                  tierThreeUpdates += ref
+                      .watch(runnerMapProvider)
+                      .values
+                      .where((element) => element.discipline.id == discId &&
+                              element.finishPunch.isPunched &&
+                              !element.finishPunch.isRead &&
+                              element.finishPunch.placement != null
+                          ? element.finishPunch.placement! >
+                              updateSettings.tierTwoLimit!
+                          : false)
+                      .length;
+                } else {
+                  tierThreeUpdates += ref
+                      .watch(runnerMapProvider)
+                      .values
+                      .where((element) => element.discipline.id == discId &&
+                              element.finishPunch.isPunched &&
+                              !element.finishPunch.isRead &&
+                              element.finishPunch.placement != null
+                          ? (element.finishPunch.placement! >
+                                  updateSettings.tierTwoLimit! &&
+                              element.finishPunch.placement! <=
+                                  updateSettings.tierThreeLimit!)
+                          : false)
+                      .length;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      mommies.add(Card(
+        child: Column(
+          children: [
+            const Text(
+              "Finish",
+              style: TextStyle(fontSize: 30),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Text(
+                  tierOneUpdates == 0 ? "" : tierOneUpdates.toString(),
+                  style: const TextStyle(
+                      color: Colors.blue, fontWeight: FontWeight.bold),
+                ),
+                Text(tierTwoUpdates == 0 ? "" : tierTwoUpdates.toString(),
+                    style: const TextStyle(
+                        color: Colors.green, fontWeight: FontWeight.bold)),
+                Text(tierThreeUpdates == 0 ? "" : tierThreeUpdates.toString(),
+                    style: const TextStyle(
+                        color: Colors.orange, fontWeight: FontWeight.bold))
+              ],
+            ),
+          ],
+        ),
+      ));
+
       return mommies;
     }
 
     return DefaultTabController(
       length: controls.length + 2,
+      initialIndex:
+          0, // controls.length + 1, // TODO the discipline could keep track
       child: Column(
         children: [
           TabBar(labelColor: Colors.blue, tabs: adultSpawner()),
