@@ -405,6 +405,27 @@ class _UpdateSettingsState extends ConsumerState<UpdateSettings> {
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
                     child: ElevatedButton(
                       onPressed: () {
+                        setState(() {
+                          _tierOneUpperController.value =
+                              _tierOneUpperController.value.copyWith(text: "3");
+                          _tierTwoUpperController.value =
+                              _tierTwoUpperController.value
+                                  .copyWith(text: "10");
+                          _tierThreeUpperController.value =
+                              _tierThreeUpperController.value
+                                  .copyWith(text: "");
+                          _tierOneSwitch = true;
+                          _tierTwoSwitch = true;
+                          _tierThreeSwitch = true;
+                        });
+                      },
+                      child: const Text("Restore defaults"),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: ElevatedButton(
+                      onPressed: () {
                         Navigator.pop(context);
                       },
                       child: const Text("Cancel"),

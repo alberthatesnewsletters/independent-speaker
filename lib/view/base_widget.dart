@@ -17,19 +17,30 @@ class BaseWidget extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(updateTierNotifier);
 
-    List<Text> makeTitles() {
-      List<Text> titles = [];
+    List<Card> makeTitles() {
+      List<Card> titles = [];
 
       final allRunners = ref.watch(runnerMapProvider).values;
       int updateCount = 0;
+      // TODO this is ignoring the settings
       for (Runner runner in allRunners) {
         if (runner.finishPunch.isPunched && !runner.finishPunch.isRead) {
           updateCount++;
         }
       }
-      titles.add(Text(
-        "All classes: $updateCount",
-        style: const TextStyle(fontSize: 30),
+      titles.add(Card(
+        child: Column(
+          children: [
+            const Text(
+              "All classes",
+              style: TextStyle(fontSize: 30),
+            ),
+            Text(
+              updateCount.toString(),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            )
+          ],
+        ),
       ));
 
       for (final disc in ref
@@ -82,9 +93,31 @@ class BaseWidget extends HookConsumerWidget {
             }
           }
         }
-        titles.add(Text(
-          "${disc.name} || T1: $tierOneUpdates T2: $tierTwoUpdates T3: $tierThreeUpdates",
-          style: const TextStyle(fontSize: 30),
+        titles.add(Card(
+          child: Column(
+            children: [
+              Text(
+                disc.name,
+                style: const TextStyle(fontSize: 30),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Text(
+                    tierOneUpdates == 0 ? "" : tierOneUpdates.toString(),
+                    style: const TextStyle(
+                        color: Colors.blue, fontWeight: FontWeight.bold),
+                  ),
+                  Text(tierTwoUpdates == 0 ? "" : tierTwoUpdates.toString(),
+                      style: const TextStyle(
+                          color: Colors.green, fontWeight: FontWeight.bold)),
+                  Text(tierThreeUpdates == 0 ? "" : tierThreeUpdates.toString(),
+                      style: const TextStyle(
+                          color: Colors.orange, fontWeight: FontWeight.bold))
+                ],
+              ),
+            ],
+          ),
         ));
       }
       return titles;

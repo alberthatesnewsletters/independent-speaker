@@ -18,12 +18,13 @@ class UpdateTier {
   final bool enableTierTwo;
   final bool enableTierThree;
 
+// TODO sending nulls here is confusing actually when nulls are actually used
   UpdateTier copyWith(int? tierOneLimit, int? tierTwoLimit, int? tierThreeLimit,
       bool? enableTierOne, bool? enableTierTwo, bool? enableTierThree) {
     return UpdateTier(
-        tierOneLimit: tierOneLimit ?? this.tierOneLimit,
-        tierTwoLimit: tierTwoLimit ?? this.tierTwoLimit,
-        tierThreeLimit: tierThreeLimit ?? this.tierThreeLimit,
+        tierOneLimit: tierOneLimit,
+        tierTwoLimit: tierTwoLimit,
+        tierThreeLimit: tierThreeLimit,
         enableTierOne: enableTierOne ?? this.enableTierOne,
         enableTierTwo: enableTierTwo ?? this.enableTierTwo,
         enableTierThree: enableTierThree ?? this.enableTierThree);
