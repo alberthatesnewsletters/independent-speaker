@@ -47,48 +47,50 @@ class UpdateTierNotifier extends StateNotifier<UpdateTier> {
         enableTierOne, enableTierTwo, enableTierThree);
   }
 
-  void changeTierOne(int? tierOneLimit) {
+// TODO cancel the null festival
+
+  void delimitTierOne(int tierOneLimit) {
     state = state.copyWith(tierOneLimit, null, null, null, null, null);
   }
 
-  void changeTierTwo(int? tierTwoLimit) {
+  void delimitTierTwo(int tierTwoLimit) {
     state = state.copyWith(null, tierTwoLimit, null, null, null, null);
   }
 
-  void changeTierThree(int? tierThreeLimit) {
+  void delimitTierThree(int tierThreeLimit) {
     state = state.copyWith(null, null, tierThreeLimit, null, null, null);
   }
 
-  void ignoreTierOne() {
+  void enableTierOne() {
     state = state.copyWith(null, null, null, true, null, null);
   }
 
-  void ignoreTierTwo() {
-    state = state.copyWith(null, null, null, null, true, null);
-  }
-
-  void ignoreTierThree() {
-    state = state.copyWith(null, null, null, null, null, true);
-  }
-
-  void unignoreTierOne() {
+  void disableTierOne() {
     state = state.copyWith(null, null, null, false, null, null);
-  }
-
-  void unignoreTierTwo() {
-    state = state.copyWith(null, null, null, null, false, null);
-  }
-
-  void unignoreTierThree() {
-    state = state.copyWith(null, null, null, null, null, false);
   }
 
   void toggleTierOne() {
     state = state.copyWith(null, null, null, !state.enableTierOne, null, null);
   }
 
+  void enableTierTwo() {
+    state = state.copyWith(null, null, null, null, true, null);
+  }
+
+  void disableTierTwo() {
+    state = state.copyWith(null, null, null, null, false, null);
+  }
+
   void toggleTierTwo() {
     state = state.copyWith(null, null, null, null, !state.enableTierTwo, null);
+  }
+
+  void enableTierThree() {
+    state = state.copyWith(null, null, null, null, null, true);
+  }
+
+  void disableTierThree() {
+    state = state.copyWith(null, null, null, null, null, false);
   }
 
   void toggleTierThree() {
