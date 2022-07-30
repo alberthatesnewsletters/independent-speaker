@@ -15,6 +15,8 @@ class BaseWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(updateTierNotifier);
+
     List<Text> makeTitles() {
       List<Text> titles = [];
 
@@ -41,24 +43,41 @@ class BaseWidget extends HookConsumerWidget {
           if (runner.discipline.id == disc.id) {
             for (final punch in runner.radioPunches.values) {
               if (!punch.isRead && punch.placement != null) {
-                if (punch.placement! < 4) {
-                  tierOneUpdates++;
-                } else if (punch.placement! < 11) {
-                  tierTwoUpdates++;
-                } else {
-                  tierThreeUpdates++;
+                if (settings.enableTierOne) {
+                  if (settings.tierOneLimit == null ||
+                      punch.placement! <= settings.tierOneLimit!) {
+                    tierOneUpdates++;
+                  } else if (settings.enableTierTwo) {
+                    if (settings.tierTwoLimit == null ||
+                        punch.placement! <= settings.tierTwoLimit!) {
+                      tierTwoUpdates++;
+                    } else if (settings.enableTierThree &&
+                        (settings.tierThreeLimit == null ||
+                            punch.placement! <= settings.tierThreeLimit!)) {
+                      tierThreeUpdates++;
+                    }
+                  }
                 }
               }
             }
             if (runner.finishPunch.isPunched &&
                 !runner.finishPunch.isRead &&
                 runner.finishPunch.placement != null) {
-              if (runner.finishPunch.placement! < 4) {
-                tierOneUpdates++;
-              } else if (runner.finishPunch.placement! < 11) {
-                tierTwoUpdates++;
-              } else {
-                tierThreeUpdates++;
+              if (settings.enableTierOne) {
+                if (settings.tierOneLimit == null ||
+                    runner.finishPunch.placement! <= settings.tierOneLimit!) {
+                  tierOneUpdates++;
+                } else if (settings.enableTierTwo) {
+                  if (settings.tierTwoLimit == null ||
+                      runner.finishPunch.placement! <= settings.tierTwoLimit!) {
+                    tierTwoUpdates++;
+                  } else if (settings.enableTierThree &&
+                      (settings.tierThreeLimit == null ||
+                          runner.finishPunch.placement! <=
+                              settings.tierThreeLimit!)) {
+                    tierThreeUpdates++;
+                  }
+                }
               }
             }
           }
