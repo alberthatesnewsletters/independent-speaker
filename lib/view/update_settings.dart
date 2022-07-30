@@ -62,7 +62,9 @@ class _UpdateSettingsState extends ConsumerState<UpdateSettings> {
     _tierOneUpperController.addListener(() {
       final input = _tierOneUpperController.text;
       if (input.isNotEmpty) {
-        ref.read(updateTierNotifier.notifier).enableTierTwo();
+        setState(() {
+          _tierTwoSwitch = true;
+        });
         if (int.parse(input) < 1) {
           _tierOneUpperController.value =
               _tierOneUpperController.value.copyWith(text: "1");
@@ -71,7 +73,9 @@ class _UpdateSettingsState extends ConsumerState<UpdateSettings> {
               .copyWith(text: "${(int.parse(input) + 1)}");
         }
       } else {
-        ref.read(updateTierNotifier.notifier).disableTierTwo();
+        setState(() {
+          _tierTwoSwitch = false;
+        });
       }
     });
 
@@ -79,12 +83,20 @@ class _UpdateSettingsState extends ConsumerState<UpdateSettings> {
       final input = _tierTwoUpperController.text;
       if (input.isNotEmpty) {
         if (int.parse(input) < int.parse(_tierTwoLowerController.value.text)) {
-          _tierTwoUpperController.value = _tierTwoUpperController.value
-              .copyWith(text: _tierTwoLowerController.value.text);
+          setState(() {
+            _tierThreeSwitch = false;
+          });
         } else {
           _tierThreeLowerController.value = _tierThreeLowerController.value
               .copyWith(text: "${(int.parse(input) + 1)}");
+          setState(() {
+            _tierThreeSwitch = true;
+          });
         }
+      } else {
+        setState(() {
+          _tierThreeSwitch = false;
+        });
       }
     });
 
@@ -190,6 +202,9 @@ class _UpdateSettingsState extends ConsumerState<UpdateSettings> {
                         child: TextFormField(
                           enabled: _tierOneSwitch && _tierTwoSwitch,
                           keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
                           controller: _tierTwoUpperController,
                           // initialValue: settings.tierOneLimit != null &&
                           //         settings.tierTwoLimit != null
@@ -240,6 +255,9 @@ class _UpdateSettingsState extends ConsumerState<UpdateSettings> {
                               _tierTwoSwitch &&
                               _tierThreeSwitch,
                           keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
                           controller: _tierThreeUpperController,
                           // initialValue: settings.tierOneLimit != null &&
                           //         settings.tierTwoLimit != null &&
