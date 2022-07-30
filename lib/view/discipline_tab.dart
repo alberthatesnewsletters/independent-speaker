@@ -352,6 +352,8 @@ class DisciplineTab extends HookConsumerWidget {
 
     return DefaultTabController(
       length: controls.length + 2,
+      initialIndex:
+          0, // controls.length + 1, // TODO the discipline could keep track
       child: Column(
         children: [
           TabBar(labelColor: Colors.blue, tabs: adultSpawner()),
