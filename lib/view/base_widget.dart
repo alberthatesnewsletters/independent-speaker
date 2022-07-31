@@ -21,27 +21,30 @@ class BaseWidget extends HookConsumerWidget {
       List<Card> titles = [];
 
       final allRunners = ref.watch(runnerMapProvider).values;
-      int updateCount = 0;
-      // TODO this is ignoring the settings
-      for (Runner runner in allRunners) {
-        if (runner.finishPunch.isPunched && !runner.finishPunch.isRead) {
-          updateCount++;
+
+      if (ref.watch(allDisciplinesTabSettingsNotifier).trackAll) {
+        int updateCount = 0;
+        // TODO this is ignoring the settings
+        for (Runner runner in allRunners) {
+          if (runner.finishPunch.isPunched && !runner.finishPunch.isRead) {
+            updateCount++;
+          }
         }
+        titles.add(Card(
+          child: Column(
+            children: [
+              const Text(
+                "All classes",
+                style: TextStyle(fontSize: 30),
+              ),
+              Text(
+                updateCount.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              )
+            ],
+          ),
+        ));
       }
-      titles.add(Card(
-        child: Column(
-          children: [
-            const Text(
-              "All classes",
-              style: TextStyle(fontSize: 30),
-            ),
-            Text(
-              updateCount.toString(),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            )
-          ],
-        ),
-      ));
 
       for (final disc in ref
           .watch(disciplineMapProvider)
@@ -126,7 +129,9 @@ class BaseWidget extends HookConsumerWidget {
     List<Widget> makeTabs() {
       List<Widget> tabs = [];
 
-      tabs.add(const AllRunnersTab());
+      if (ref.watch(allDisciplinesTabSettingsNotifier).trackAll) {
+        tabs.add(const AllRunnersTab());
+      }
 
       for (final disc in ref.watch(disciplineMapProvider).values.where(
             (element) => element.isFollowed,
@@ -151,18 +156,12 @@ class BaseWidget extends HookConsumerWidget {
             itemBuilder: (context) {
               // TODO enum instead of ints
               return const [
-                PopupMenuItem<int>(
-                  value: 0,
-                  child: Text("I am happy"),
-                ),
                 PopupMenuItem<int>(value: 1, child: Text("Subscriptions")),
                 PopupMenuItem<int>(value: 2, child: Text("Alerts")),
               ];
             },
             onSelected: (value) {
-              if (value == 0) {
-                print("User is happy");
-              } else if (value == 1) {
+              if (value == 1) {
                 Navigator.pushNamed(context, Settings.routeName);
               } else if (value == 2) {
                 Navigator.pushNamed(context, UpdateSettings.routeName);
@@ -177,7 +176,7 @@ class BaseWidget extends HookConsumerWidget {
                 .values
                 .where((element) => element.isFollowed)
                 .length +
-            1,
+            (ref.watch(allDisciplinesTabSettingsNotifier).trackAll ? 1 : 0),
         child: Column(
           children: [
             TabBar(labelColor: Colors.blue, tabs: makeTitles()),

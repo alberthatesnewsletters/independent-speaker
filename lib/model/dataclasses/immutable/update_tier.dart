@@ -17,18 +17,6 @@ class UpdateTier {
   final bool enableTierOne;
   final bool enableTierTwo;
   final bool enableTierThree;
-
-// TODO sending nulls here is confusing actually when nulls are actually used
-  UpdateTier copyWith(int? tierOneLimit, int? tierTwoLimit, int? tierThreeLimit,
-      bool? enableTierOne, bool? enableTierTwo, bool? enableTierThree) {
-    return UpdateTier(
-        tierOneLimit: tierOneLimit,
-        tierTwoLimit: tierTwoLimit,
-        tierThreeLimit: tierThreeLimit,
-        enableTierOne: enableTierOne ?? this.enableTierOne,
-        enableTierTwo: enableTierTwo ?? this.enableTierTwo,
-        enableTierThree: enableTierThree ?? this.enableTierThree);
-  }
 }
 
 class UpdateTierNotifier extends StateNotifier<UpdateTier> {
@@ -44,58 +32,12 @@ class UpdateTierNotifier extends StateNotifier<UpdateTier> {
 
   void completeUpdate(int? tierOneLimit, int? tierTwoLimit, int? tierThreeLimit,
       bool enableTierOne, bool enableTierTwo, bool enableTierThree) {
-    state = state.copyWith(tierOneLimit, tierTwoLimit, tierThreeLimit,
-        enableTierOne, enableTierTwo, enableTierThree);
-  }
-
-// TODO cancel the null festival
-
-  void delimitTierOne(int tierOneLimit) {
-    state = state.copyWith(tierOneLimit, null, null, null, null, null);
-  }
-
-  void delimitTierTwo(int tierTwoLimit) {
-    state = state.copyWith(null, tierTwoLimit, null, null, null, null);
-  }
-
-  void delimitTierThree(int tierThreeLimit) {
-    state = state.copyWith(null, null, tierThreeLimit, null, null, null);
-  }
-
-  void enableTierOne() {
-    state = state.copyWith(null, null, null, true, null, null);
-  }
-
-  void disableTierOne() {
-    state = state.copyWith(null, null, null, false, null, null);
-  }
-
-  void toggleTierOne() {
-    state = state.copyWith(null, null, null, !state.enableTierOne, null, null);
-  }
-
-  void enableTierTwo() {
-    state = state.copyWith(null, null, null, null, true, null);
-  }
-
-  void disableTierTwo() {
-    state = state.copyWith(null, null, null, null, false, null);
-  }
-
-  void toggleTierTwo() {
-    state = state.copyWith(null, null, null, null, !state.enableTierTwo, null);
-  }
-
-  void enableTierThree() {
-    state = state.copyWith(null, null, null, null, null, true);
-  }
-
-  void disableTierThree() {
-    state = state.copyWith(null, null, null, null, null, false);
-  }
-
-  void toggleTierThree() {
-    state =
-        state.copyWith(null, null, null, null, null, !state.enableTierThree);
+    state = UpdateTier(
+        tierOneLimit: tierOneLimit,
+        tierTwoLimit: tierTwoLimit,
+        tierThreeLimit: tierThreeLimit,
+        enableTierOne: enableTierOne,
+        enableTierTwo: enableTierTwo,
+        enableTierThree: enableTierThree);
   }
 }

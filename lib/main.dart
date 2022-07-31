@@ -1,3 +1,4 @@
+import 'package:attempt4/model/dataclasses/immutable/all_disciplines_settings.dart';
 import 'package:attempt4/model/dataclasses/immutable/competition.dart';
 import 'package:attempt4/model/dataclasses/immutable/current_time.dart';
 import 'package:attempt4/model/dataclasses/immutable/update_tier.dart';
@@ -58,6 +59,10 @@ final currentTimeProvider =
 final updateTierNotifier =
     StateNotifierProvider<UpdateTierNotifier, UpdateTier>(
         (ref) => UpdateTierNotifier());
+
+final allDisciplinesTabSettingsNotifier =
+    StateNotifierProvider<AllDisciplinesTabSettings, AllDisciplinesTab>(
+        (ref) => AllDisciplinesTabSettings());
 
 // final backendInfoProvider = StateNotifierProvider<BackendInfo, Backend>((ref) {
 //   throw UnimplementedError();
