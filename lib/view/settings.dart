@@ -18,6 +18,14 @@ class Settings extends ConsumerStatefulWidget {
 }
 
 class _SettingState extends ConsumerState<Settings> {
+  late bool _trackAll;
+
+  @override
+  void initState() {
+    super.initState();
+    _trackAll = ref.read(allDisciplinesTabSettingsNotifier).trackAll;
+  }
+
   @override
   Widget build(BuildContext context) {
     final disciplines = ref.watch(disciplineMapProvider).values.toList();
@@ -46,6 +54,29 @@ class _SettingState extends ConsumerState<Settings> {
                                   .read(disciplineMapProvider.notifier)
                                   .follow(disciplines[index].id));
                     }),
+                  ),
+                ),
+                Center(
+                  child: SwitchListTile(
+                    title: const Text("Show \"All classes\" tab"),
+                    value: disciplines
+                            .where((element) => element.isFollowed)
+                            .isEmpty
+                        ? true
+                        : _trackAll,
+                    // TODO spaghetti
+                    onChanged: (_) {
+                      if (disciplines
+                          .where((element) => element.isFollowed)
+                          .isNotEmpty) {
+                        setState(() {
+                          _trackAll = !_trackAll;
+                          ref
+                              .read(allDisciplinesTabSettingsNotifier.notifier)
+                              .setTrackAll(_trackAll);
+                        });
+                      }
+                    },
                   ),
                 ),
                 ElevatedButton(
