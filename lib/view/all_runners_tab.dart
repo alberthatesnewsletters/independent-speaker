@@ -15,8 +15,20 @@ class AllRunnersTab extends ConsumerWidget {
         .where((element) => element.finishPunch.isPunched)
         .toList();
 
+    final observedRunners = ref
+        .watch(runnerMapProvider)
+        .values
+        .where((element) =>
+            element.discipline.id ==
+                ref.watch(allDisciplinesTabSettingsNotifier).current &&
+            element.finishPunch.isPunched)
+        .toList();
+
     allRunners.sort(
         (a, b) => a.finishPunch.punchedAt.compareTo(b.finishPunch.punchedAt));
+
+    observedRunners.sort((a, b) =>
+        a.finishPunch.punchedAfter.compareTo(b.finishPunch.punchedAfter));
 
     return Column(
       children: [
@@ -25,16 +37,65 @@ class AllRunnersTab extends ConsumerWidget {
                 ref.read(runnerMapProvider.notifier).markFinishReadAll(),
             child: const Text("Mark all as read")),
         Expanded(
-          child: ListView(
-            controller: ScrollController(),
+          child: Row(
             children: [
-              for (final runner in allRunners)
-                ProviderScope(
-                    overrides: [currentRunner.overrideWithValue(runner)],
-                    child: const RunnerFinishItem())
+              Expanded(
+                child: ListView(
+                  controller: ScrollController(),
+                  children: [
+                    for (final runner in allRunners)
+                      ProviderScope(
+                          overrides: [currentRunner.overrideWithValue(runner)],
+                          child: const AllRunnersFinishItem())
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  controller: ScrollController(),
+                  children: [
+                    for (final runner in observedRunners)
+                      ProviderScope(
+                          overrides: [currentRunner.overrideWithValue(runner)],
+                          child: const RunnerFinishItem())
+                  ],
+                ),
+              ),
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+class AllRunnersFinishItem extends ConsumerWidget {
+  const AllRunnersFinishItem({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final runner = ref.watch(currentRunner);
+
+    void _tapped() {
+      ref.read(runnerMapProvider.notifier).toggleFinishUpdateSingle(runner.id);
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: ListTile(
+            title: Text(
+                "${runner.finishPunch.placement} : ${runner.name} | ${runner.discipline.name}"),
+            subtitle: Text(runner.finishPunch.punchedAfter.toString()),
+            tileColor: runner.finishPunch.isRead ? Colors.white : Colors.green,
+            onTap: _tapped,
+          ),
+        ),
+        IconButton(
+            onPressed: () => ref
+                .read(allDisciplinesTabSettingsNotifier.notifier)
+                .viewDiscipline(runner.discipline.id),
+            icon: const Icon(Icons.arrow_right)),
       ],
     );
   }

@@ -156,18 +156,12 @@ class BaseWidget extends HookConsumerWidget {
             itemBuilder: (context) {
               // TODO enum instead of ints
               return const [
-                PopupMenuItem<int>(
-                  value: 0,
-                  child: Text("I am happy"),
-                ),
                 PopupMenuItem<int>(value: 1, child: Text("Subscriptions")),
                 PopupMenuItem<int>(value: 2, child: Text("Alerts")),
               ];
             },
             onSelected: (value) {
-              if (value == 0) {
-                print("User is happy");
-              } else if (value == 1) {
+              if (value == 1) {
                 Navigator.pushNamed(context, Settings.routeName);
               } else if (value == 2) {
                 Navigator.pushNamed(context, UpdateSettings.routeName);
