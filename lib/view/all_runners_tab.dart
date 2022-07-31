@@ -24,11 +24,29 @@ class AllRunnersTab extends ConsumerWidget {
             element.finishPunch.isPunched)
         .toList();
 
+    final alsoObservedRunners = ref
+        .watch(runnerMapProvider)
+        .values
+        .where((element) =>
+            element.discipline.id ==
+                ref.watch(allDisciplinesTabSettingsNotifier).current &&
+            !element.finishPunch.isPunched)
+        .toList();
+
     allRunners.sort(
         (a, b) => a.finishPunch.punchedAt.compareTo(b.finishPunch.punchedAt));
 
     observedRunners.sort((a, b) =>
         a.finishPunch.punchedAfter.compareTo(b.finishPunch.punchedAfter));
+
+    alsoObservedRunners.sort((a, b) => ref
+        .watch(currentTimeProvider)
+        .time
+        .difference(a.startTime)
+        .compareTo(
+            ref.watch(currentTimeProvider).time.difference(b.startTime)));
+
+    observedRunners.addAll(alsoObservedRunners);
 
     return Column(
       children: [
@@ -57,7 +75,7 @@ class AllRunnersTab extends ConsumerWidget {
                     for (final runner in observedRunners)
                       ProviderScope(
                           overrides: [currentRunner.overrideWithValue(runner)],
-                          child: const RunnerFinishItem())
+                          child: const AllRunnersStatusItem())
                   ],
                 ),
               ),
@@ -97,6 +115,27 @@ class AllRunnersFinishItem extends ConsumerWidget {
                 .viewDiscipline(runner.discipline.id),
             icon: const Icon(Icons.arrow_right)),
       ],
+    );
+  }
+}
+
+class AllRunnersStatusItem extends ConsumerWidget {
+  const AllRunnersStatusItem({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final runner = ref.watch(currentRunner);
+
+    return ListTile(
+      title: Text("${runner.finishPunch.placement ?? "R"} : ${runner.name}"),
+      subtitle: Text(runner.finishPunch.isPunched
+          ? runner.finishPunch.punchedAfter.toString()
+          : ref
+              .watch(currentTimeProvider)
+              .time
+              .difference(runner.startTime)
+              .toString()),
+      tileColor: Colors.white,
     );
   }
 }
