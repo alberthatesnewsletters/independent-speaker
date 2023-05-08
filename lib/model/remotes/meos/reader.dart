@@ -1,9 +1,11 @@
 import 'dart:developer';
 
+import 'package:attempt4/main.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xml/xml.dart';
 
 import '../../better_listener.dart';
-import '../../competition.dart';
+import '../../dataclasses/immutable/competition.dart';
 import '../../dataclasses/remote/club.dart';
 import '../../dataclasses/remote/control.dart';
 import '../../dataclasses/remote/discipline.dart';
@@ -14,8 +16,11 @@ import '../../../utils.dart';
 import '../../enums/country.dart';
 
 class MeOSreader {
-  final MeOSconnection _conn;
-  final BetterListener _listener;
+  MeOSreader(this.conn, this.listener, this.ref);
+
+  final MeOSconnection conn;
+  final BetterListener listener;
+  final WidgetRef ref;
   int _fullLoads = 0;
   int _errors = 0;
 
@@ -37,21 +42,21 @@ class MeOSreader {
     99: RunnerStatus.NotParticipating
   };
 
-  MeOSreader(this._conn, this._listener);
-
   void _wipeLists() {
-    _listener.wipeInfo();
+    listener.wipeInfo();
   }
 
   void _setCompetition(XmlElement compInfo) {
     try {
       // TODO replace forcegets with gets and handle null
-      Competition.name = compInfo.text;
-      Competition.date = DateTime.tryParse(compInfo.forceGetAttribute("date"));
-      Competition.organizer = compInfo.forceGetAttribute("organizer");
-      Competition.homepage = compInfo.forceGetAttribute("homepage");
+      final newComp = Competition(
+          name: compInfo.text,
+          date: DateTime.parse(compInfo.forceGetAttribute("date")),
+          organizer: compInfo.forceGetAttribute("organizer"),
+          homepage: compInfo.forceGetAttribute("homepage"),
+          isPlaceholder: false);
+      ref.read(competitionInfoProvider.notifier).overwrite(newComp);
       print("Competition info parsed");
-      print(Competition.date);
     } on Exception catch (e) {
       log(e.toString());
       return;
@@ -196,6 +201,7 @@ class MeOSreader {
             startTime: startTime,
             radioTimes: radioTimes,
             runningTime: runningTime,
+            isFinished: runningTime != 0,
             status: status,
             hasNoClub: hasNoClub);
       }
@@ -213,7 +219,7 @@ class MeOSreader {
     if (clubs.isNotEmpty) {
       print("Clubs: ${clubs.length}");
     }
-    _listener.processClubs(clubs);
+    listener.processClubs(clubs);
   }
 
   void _updateControls(Iterable<XmlElement> controlInfo) {
@@ -225,7 +231,7 @@ class MeOSreader {
     if (controls.isNotEmpty) {
       print("Controls: ${controls.length}");
     }
-    _listener.processControls(controls);
+    listener.processControls(controls);
   }
 
   void _updateDisciplines(Iterable<XmlElement> discInfo) {
@@ -237,7 +243,7 @@ class MeOSreader {
     if (disciplines.isNotEmpty) {
       print("Disciplines: ${disciplines.length}");
     }
-    _listener.processDisciplines(disciplines);
+    listener.processDisciplines(disciplines);
   }
 
   void _updateRunners(Iterable<XmlElement> runnerInfo) {
@@ -249,12 +255,12 @@ class MeOSreader {
     if (runners.isNotEmpty) {
       print("Runners: ${runners.length}");
     }
-    _listener.processRunners(runners);
+    listener.processRunners(runners);
   }
 
   Future<void> _parseUpdates() async {
     final XmlDocument update =
-        await _conn.getDifference(previousSuccessful: _errors == 0);
+        await conn.getDifference(previousSuccessful: _errors == 0);
 
     _errors = 0;
 
@@ -291,11 +297,19 @@ class MeOSreader {
     //_printClubs();
   }
 
+  Future<void> initialize() async {
+    final XmlDocument compInfo = await conn.getCompetition();
+    _setCompetition(
+        compInfo.forceGetElement("MOPComplete").forceGetElement("competition"));
+  }
+
   Future<void> run() async {
-    //await _parseUpdates();
-    while (true) {
-      await _parseUpdates();
-      await Future.delayed(Duration(milliseconds: Utils.updateWaitMs));
+    if (!Utils.isRunning) {
+      Utils.isRunning; // just to make hot reload less stupid
+      while (true) {
+        await _parseUpdates();
+        await Future.delayed(Duration(milliseconds: Utils.updateWaitMs));
+      }
     }
   }
 }

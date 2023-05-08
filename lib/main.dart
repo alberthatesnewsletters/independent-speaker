@@ -1,13 +1,24 @@
-import 'package:attempt4/model/dataclasses/immutable/club.dart';
-import 'package:attempt4/model/enums/runner_status.dart';
+import 'package:attempt4/model/dataclasses/immutable/all_disciplines_settings.dart';
+import 'package:attempt4/model/dataclasses/immutable/competition.dart';
+import 'package:attempt4/model/dataclasses/immutable/current_time.dart';
+import 'package:attempt4/model/dataclasses/immutable/update_tier.dart';
+import 'package:attempt4/view/base_widget.dart';
+import 'package:attempt4/view/update_settings.dart';
+import 'package:flutter/scheduler.dart';
+
+import 'backend.dart';
+import 'model/dataclasses/immutable/club.dart';
+import 'model/enums/runner_status.dart';
+import 'package:attempt4/view/settings.dart';
+import 'package:attempt4/view/splash.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'model/better_listener.dart';
 import 'model/dataclasses/immutable/control.dart';
 import 'model/dataclasses/immutable/discipline.dart';
 import 'model/dataclasses/immutable/runner.dart';
+import 'model/enums/sorting.dart';
 import 'model/remotes/meos/connection.dart';
 import 'model/remotes/meos/reader.dart';
 import 'utils.dart';
@@ -24,24 +35,45 @@ import 'utils.dart';
 //   //runApp(const MyApp());
 // }
 
-final clubMapProvider = StateNotifierProvider<ClubMap, Map<int, Club>>((ref) {
-  return ClubMap();
-});
+final clubMapProvider =
+    StateNotifierProvider<ClubMap, Map<int, Club>>((ref) => ClubMap());
 
 final controlMapProvider =
-    StateNotifierProvider<ControlMap, Map<int, Control>>((ref) {
-  return ControlMap();
-});
+    StateNotifierProvider<ControlMap, Map<int, Control>>((ref) => ControlMap());
 
 final disciplineMapProvider =
-    StateNotifierProvider<DisciplineMap, Map<int, Discipline>>((ref) {
-  return DisciplineMap();
-});
+    StateNotifierProvider<DisciplineMap, Map<int, Discipline>>(
+        (ref) => DisciplineMap());
 
 final runnerMapProvider =
-    StateNotifierProvider<RunnerMap, Map<int, Runner>>((ref) {
-  return RunnerMap();
-});
+    StateNotifierProvider<RunnerMap, Map<int, Runner>>((ref) => RunnerMap());
+
+final competitionInfoProvider =
+    StateNotifierProvider<CompetitionInfo, Competition>(
+        (ref) => CompetitionInfo());
+
+final currentTimeProvider =
+    StateNotifierProvider<CurrentTimeNotifier, CurrentTime>(
+        (ref) => CurrentTimeNotifier());
+
+final updateTierNotifier =
+    StateNotifierProvider<UpdateTierNotifier, UpdateTier>(
+        (ref) => UpdateTierNotifier());
+
+final allDisciplinesTabSettingsNotifier =
+    StateNotifierProvider<AllDisciplinesTabSettings, AllDisciplinesTab>(
+        (ref) => AllDisciplinesTabSettings());
+
+// final backendInfoProvider = StateNotifierProvider<BackendInfo, Backend>((ref) {
+//   throw UnimplementedError();
+// });
+
+void updateTime(WidgetRef ref) async {
+  while (true) {
+    ref.read(currentTimeProvider.notifier).update(DateTime.now());
+    await Future.delayed(const Duration(seconds: 1));
+  }
+}
 
 Future<void> main() async {
   Utils.serverIP = "192.168.1.139";
@@ -50,8 +82,19 @@ Future<void> main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({Key? key}) : super(key: key);
+
+  @override
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    updateTime(ref);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,16 +103,33 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const Scaffold(body: TestWidget()),
+      routes: {
+        "/": (context) => const SplashScreen(),
+        Settings.routeName: (context) {
+          // final backend = ModalRoute.of(context)!.settings.arguments as Backend;
+
+          return const Settings(); // TODO less string reliance, like here
+        },
+        UpdateSettings.routeName: (context) {
+          return const UpdateSettings();
+        },
+        "basewidget": (context) => const BaseWidget()
+      },
     );
   }
 }
 
-final _currentRunner = Provider<Runner>((ref) => throw UnimplementedError());
-final _currentDisciplineId = Provider<int>((ref) => throw UnimplementedError());
-final _currentControlId = Provider<int>((ref) => throw UnimplementedError());
+final currentRunner = Provider<Runner>((ref) => throw UnimplementedError());
+final currentDisciplineId = Provider<int>((ref) => throw UnimplementedError());
+final currentControlId = Provider<int>((ref) => throw UnimplementedError());
+final currentForewarnIsFinish =
+    Provider<bool>((ref) => throw UnimplementedError());
 
 final runnerDisciplineFilter = StateProvider<int>((_) => 1);
+
+final lalala = StateProvider.family<Runner, int>((ref, currentRunnerId) {
+  return ref.watch(runnerMapProvider)[currentRunnerId]!;
+}); // experiment
 
 final filteredRunners = Provider<List<Runner>>((ref) {
   final filter = ref.watch(runnerDisciplineFilter);
@@ -79,278 +139,3 @@ final filteredRunners = Provider<List<Runner>>((ref) {
       .where((runner) => runner.discipline.id == filter)
       .toList();
 });
-
-class TestWidget extends HookConsumerWidget {
-  const TestWidget({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final conn = MeOSconnection();
-    final listener = BetterListener(clubMapProvider, controlMapProvider,
-        disciplineMapProvider, runnerMapProvider, ref);
-    final reader = MeOSreader(conn, listener);
-    reader.run();
-
-    //return const Text("Hello world!");
-
-    return Container(child: const TestierWidget());
-  }
-}
-
-class TestierWidget extends HookConsumerWidget {
-  const TestierWidget({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    List<Text> makeTitles() {
-      List<Text> titles = [];
-      for (Discipline disc in ref.watch(disciplineMapProvider).values) {
-        int updateCount = 0;
-        for (Runner runner in ref.watch(runnerMapProvider).values) {
-          if (runner.discipline.id == disc.id) {
-            for (final punch in runner.punches.values) {
-              if (!punch.isRead) {
-                updateCount++;
-              }
-            }
-          }
-        }
-        titles.add(Text(
-          "${disc.name}: $updateCount",
-          style: const TextStyle(fontSize: 30),
-        ));
-      }
-      return titles;
-    }
-
-    return DefaultTabController(
-      length: ref.watch(disciplineMapProvider).length,
-      child: Column(
-        children: [
-          TabBar(labelColor: Colors.blue, tabs: makeTitles()),
-          Expanded(
-            child: TabBarView(
-              children: [
-                for (int discId in ref.watch(disciplineMapProvider).keys)
-                  ProviderScope(overrides: [
-                    _currentDisciplineId.overrideWithValue(discId)
-                  ], child: const DisciplineTab())
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-}
-
-class DisciplineTab extends HookConsumerWidget {
-  const DisciplineTab({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final discId = ref.watch(_currentDisciplineId);
-    final controls = ref.watch(disciplineMapProvider)[discId]!.controls;
-
-    List<Widget> babySpawner() {
-      List<Widget> babbies = [];
-      for (int controlId in controls) {
-        babbies.add(ProviderScope(
-            overrides: [_currentControlId.overrideWithValue(controlId)],
-            child: const RadioPunches()));
-      }
-      babbies.add(const Finishes());
-      return babbies;
-    }
-
-    List<Text> adultSpawner() {
-      List<Text> mommies = [];
-      for (int controlId
-          in ref.watch(disciplineMapProvider)[discId]!.controls) {
-        final newsCount = ref
-            .watch(runnerMapProvider)
-            .values
-            .where((element) =>
-                element.discipline.id == discId &&
-                element.punches.containsKey(controlId) &&
-                !element.punches[controlId]!.isRead)
-            .length;
-
-        mommies.add(Text(
-          "$controlId: $newsCount",
-          style: const TextStyle(fontSize: 30),
-        ));
-      }
-      mommies.add(const Text("Finish", style: TextStyle(fontSize: 30)));
-      return mommies;
-    }
-
-    return DefaultTabController(
-      length: controls.length + 1,
-      child: Column(
-        children: [
-          TabBar(labelColor: Colors.blue, tabs: adultSpawner()),
-          Expanded(
-            child: TabBarView(
-              children: babySpawner(),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-}
-
-class RadioPunches extends HookConsumerWidget {
-  const RadioPunches({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final discId = ref.watch(_currentDisciplineId);
-    final controlId = ref.watch(_currentControlId);
-
-    final runners = ref
-        .watch(runnerMapProvider)
-        .values
-        .where((runner) =>
-            runner.discipline.id == discId &&
-            runner.punches.containsKey(controlId))
-        .toList();
-
-    runners.sort((a, b) => a.finishedAfter.compareTo(b.finishedAfter)); // TODO
-
-    return ListView(
-      controller: ScrollController(),
-      children: [
-        for (Runner runner in runners)
-          ProviderScope(
-              overrides: [_currentRunner.overrideWithValue(runner)],
-              child: const RunnerPunchItem())
-      ],
-    );
-  }
-}
-
-class Finishes extends HookConsumerWidget {
-  const Finishes({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final discId = ref.watch(_currentDisciplineId);
-
-    final runners = ref
-        .watch(runnerMapProvider)
-        .values
-        .where((runner) =>
-            runner.discipline.id == discId &&
-            runner.finishedAfter.inMilliseconds.toInt() > 0)
-        .toList();
-
-    runners.sort((a, b) => a.finishedAfter.compareTo(b.finishedAfter));
-
-    return ListView(
-      controller: ScrollController(),
-      children: [
-        for (Runner runner in runners)
-          ProviderScope(
-              overrides: [_currentRunner.overrideWithValue(runner)],
-              child: const RunnerFinishItem())
-      ],
-    );
-  }
-}
-
-class RunnerPunchItem extends HookConsumerWidget {
-  const RunnerPunchItem({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final runner = ref.watch(_currentRunner);
-    final controlId = ref.watch(_currentControlId);
-
-    void tapped() {
-      ref
-          .read(runnerMapProvider.notifier)
-          .toggleControlUpdateSingle(runner.id, controlId);
-    }
-
-    return ListTile(
-      title: Text(runner.name),
-      subtitle: Text(runner.punches[controlId]!.punchedAfter.toString()),
-      tileColor:
-          runner.punches[controlId]!.isRead ? Colors.white : Colors.green,
-      onTap: tapped,
-    );
-  }
-}
-
-class RunnerFinishItem extends HookConsumerWidget {
-  const RunnerFinishItem({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final runner = ref.watch(_currentRunner);
-
-    return ListTile(
-      title: Text(runner.name),
-      subtitle: Text(runner.finishedAfter.toString()),
-    );
-  }
-}
-
-// class YayWidget extends HookConsumerWidget {
-//   YayWidget({Key? key}) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context, WidgetRef ref) {
-//     final clubs = ref.watch(clubMapProvider).values.toList();
-//     final controls = ref.watch(controlMapProvider).values.toList();
-//     final disciplines = ref.watch(disciplineMapProvider).values.toList();
-//     final runners = ref.watch(runnerMapProvider).values.toList();
-
-//     List<ListTile> allTheThings() {
-//       final List<ListTile> things = [];
-//       for (Club club in clubs) {
-//         things.add(ListTile(
-//           title: Text(club.name),
-//           subtitle: Text(club.country.toString()),
-//         ));
-//       }
-
-//       for (Control control in controls) {
-//         things.add(ListTile(
-//           title: Text(control.name),
-//           subtitle: Text(control.id.toString()),
-//         ));
-//       }
-
-//       for (Discipline discipline in disciplines) {
-//         things.add(ListTile(
-//           title: Text(discipline.name),
-//           subtitle: Text(discipline.id.toString()),
-//         ));
-//       }
-
-//       for (Runner runner in runners) {
-//         things.add(ListTile(
-//           title: Text(runner.name),
-//           subtitle: Text(runner.club.name),
-//         ));
-//       }
-
-//       return things;
-//     }
-
-//     //return Text(clubs.first.name);
-
-//     return Column(
-//       children: [
-//         Expanded(
-//           child: ListView(
-//             children: allTheThings(),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-// }
